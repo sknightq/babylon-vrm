@@ -1,20 +1,8 @@
+import { TransformNode } from '@babylonjs/core'
 import { SceneLoader } from '@babylonjs/core/Loading/sceneLoader'
-import { GLTFLoader, IGLTFLoaderExtension } from '@babylonjs/loaders/glTF/2.0'
+import { GLTFLoader, IGLTFLoaderExtension, INode } from '@babylonjs/loaders/glTF/2.0'
 import { GLTFFileLoader } from '@babylonjs/loaders/glTF/glTFFileLoader'
 import { VRM } from './vrm'
-
-export * from './vrm'
-export * from './importer'
-// export * from './VRMUtils';
-// export * from './blendshape';
-// export * from './debug';
-// export * from './firstperson';
-// export * from './humanoid';
-// export * from './lookat';
-// export * from './springbone';
-// export * from './types';
-// export * from './material';
-export * from './meta'
 
 export class VRMFileLoader extends GLTFFileLoader {
   public name = 'vrm'
@@ -32,7 +20,8 @@ if (SceneLoader) {
 }
 const NAME = 'VRM'
 
-export class VRMExt implements IGLTFLoaderExtension {
+// gltf custom loader with some hooks
+export class VRMExtensionLoader implements IGLTFLoaderExtension {
   /**
    * @inheritdoc
    */
@@ -95,6 +84,13 @@ export class VRMExt implements IGLTFLoaderExtension {
     })
   }
 
+  public loadNodeAsync(context: string, node: INode, assign: (babylonMesh: TransformNode) => void): Promise<TransformNode> {
+    return this.loader.loadNodeAsync(context, node, function (babylonMesh) {
+
+      console.log('node:%O', node)
+      assign(babylonMesh);
+  });
+  }
   // /**
   //  * @inheritdoc
   //  */
@@ -132,5 +128,18 @@ GLTFLoader.RegisterExtension(NAME, loader => {
   // VRM.from(loader).then(vrm=>{
   //   console.log('vrm:%O', vrm)
   // })
-  return new VRMExt(loader)
+  return new VRMExtensionLoader(loader)
 })
+
+export * from './vrm'
+export * from './importer'
+// export * from './VRMUtils';
+// export * from './blendshape';
+// export * from './debug';
+// export * from './firstperson';
+export * from './humanoid';
+// export * from './lookat';
+// export * from './springbone';
+// export * from './types';
+// export * from './material';
+export * from './meta'
