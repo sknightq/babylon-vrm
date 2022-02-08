@@ -1,28 +1,28 @@
-import * as BABYLON from '@babylonjs/core';
-import { GLTF2 } from '@babylonjs/loaders';
+import * as BABYLON from '@babylonjs/core'
+import { GLTF2 } from '@babylonjs/loaders'
 
-// import { VRMBlendShapeProxy } from './blendshape';
+import { BlendShapeProxy } from './blendShape/index';
 // import { VRMFirstPerson } from './firstperson';
-import { VRMHumanoid } from './humanoid/index';
+import { Humanoid } from './humanoid/index'
 // import { VRMLookAtHead } from './lookat';
-import { Meta } from './meta/index';
+import { Meta } from './meta/index'
 // import { VRMSpringBoneManager } from './springbone';
 // import { deepDispose } from './utils/disposer';
-import { Importer, ImporterOptions } from './importer';
+import { Importer, ImporterOptions } from './importer'
 
 /**
  * Parameters for a [[VRM]] class.
  */
 export interface Parameters {
-  scene:BABYLON.Scene,
+  scene: BABYLON.Scene
   // scene: THREE.Scene | THREE.Group; // COMPAT: `GLTF.scene` is going to be `THREE.Group` in r114
-  humanoid?: VRMHumanoid;
-  // blendShapeProxy?: VRMBlendShapeProxy;
+  humanoid?: Humanoid
+  blendShapeProxy?: BlendShapeProxy;
   // firstPerson?: VRMFirstPerson;
   // lookAt?: VRMLookAtHead;
   // materials?: THREE.Material[];
   // springBoneManager?: VRMSpringBoneManager;
-  meta?: Meta;
+  meta?: Meta
 }
 
 /**
@@ -57,8 +57,8 @@ export class VRM {
   //   return await importer.import(gltf);
   // }
   public static async from(loader: GLTF2.GLTFLoader, options: ImporterOptions = {}): Promise<VRM> {
-    const importer = new Importer(options);
-    return await importer.import(loader);
+    const importer = new Importer(options)
+    return await importer.import(loader)
   }
   /**
    * `THREE.Scene` or `THREE.Group` (depends on your three.js revision) that contains the entire VRM.
@@ -72,13 +72,13 @@ export class VRM {
    *
    * @TODO Add a link to VRM spec
    */
-  // public readonly humanoid?: VRMHumanoid;
+  public readonly humanoid?: Humanoid
 
   /**
    * Contains [[VRMBlendShapeProxy]] of the VRM.
    * You might want to control these facial expressions via [[VRMBlendShapeProxy.setValue]].
    */
-  // public readonly blendShapeProxy?: VRMBlendShapeProxy;
+  public readonly blendShapeProxy?: BlendShapeProxy;
 
   /**
    * Contains [[VRMFirstPerson]] of the VRM.
@@ -102,7 +102,7 @@ export class VRM {
    * Contains meta fields of the VRM.
    * You might want to refer these license fields before use your VRMs.
    */
-  public readonly meta?: Meta;
+  public readonly meta?: Meta
 
   /**
    * A [[VRMSpringBoneManager]] manipulates all spring bones attached on the VRM.
@@ -116,14 +116,14 @@ export class VRM {
    * @param params [[VRMParameters]] that represents components of the VRM
    */
   public constructor(params: Parameters) {
-    this.scene = params.scene;
-    // this.humanoid = params.humanoid;
-    // this.blendShapeProxy = params.blendShapeProxy;
+    this.scene = params.scene
+    this.humanoid = params.humanoid;
+    this.blendShapeProxy = params.blendShapeProxy;
     // this.firstPerson = params.firstPerson;
     // this.lookAt = params.lookAt;
     // this.materials = params.materials;
     // this.springBoneManager = params.springBoneManager;
-    this.meta = params.meta;
+    this.meta = params.meta
   }
 
   /**
@@ -159,12 +159,12 @@ export class VRM {
   //  * Dispose everything about the VRM instance.
   //  */
   public dispose(): void {
-    const scene = this.scene;
+    const scene = this.scene
     if (scene) {
+      // TODO
       // deepDispose(scene);
     }
 
-    this.meta?.texture?.dispose();
+    this.meta?.texture?.dispose()
   }
 }
-
