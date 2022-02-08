@@ -82,7 +82,9 @@ export class Humanoid {
       _v3A.add(node.position);
     
       // _quatA.premultiply(node.quaternion);
-      _quatA.premultiply(node.rotationQuaternion);
+      // rotationQ x _quatA
+      // _quatA.premultiply(node.rotationQuaternion);
+      _quatA = node.rotationQuaternion.multiply(_quatA)
 
       pose[vrmBoneName] = {
         position: _v3A.asArray() as RawVector3,
@@ -124,11 +126,13 @@ export class Humanoid {
       }
 
       if (state.rotation) {
-        //node.quaternion.fromArray(state.rotation);
-        node.rotationQuaternion.FromArray(state.rotation);
+        // node.quaternion.fromArray(state.rotation);
+        node.rotationQuaternion = BABYLON.Quaternion.FromArray(state.rotation);
 
         if (restState.rotation) {
-          node.quaternion.multiply(_quatA.fromArray(restState.rotation));
+          // node.quaternion.multiply(_quatA.fromArray(restState.rotation));
+          _quatA = BABYLON.Quaternion.FromArray(restState.rotation)
+          node.rotationQuaternion.multiply(_quatA)
         }
       }
     });
@@ -150,7 +154,8 @@ export class Humanoid {
       }
 
       if (rest?.rotation) {
-        node.quaternion.fromArray(rest.rotation);
+        // node.quaternion.fromArray(rest.rotation);
+        node.rotationQuaternion = BABYLON.Quaternion.FromArray(rest.rotation)
       }
     });
   }
