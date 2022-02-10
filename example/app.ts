@@ -25,19 +25,13 @@ class App {
 
     this.loadVRM(scene)
   }
-  loadVRM(scene) {
-    BABYLON.SceneLoader.ImportMesh('', '/models/', 'boy.vrm', scene, () => {
-      const vrm = scene.metadata.vrm[0]
-      scene.onBeforeRenderObservable.add(() => {
-        // Update SpringBone
-        vrm.update(scene.getEngine().getDeltaTime())
-      })
+  async loadVRM(scene) {
+    const vrmScene = await BABYLON.SceneLoader.AppendAsync('/models/', 'boy.vrm', scene)
+    vrmScene.onBeforeRenderObservable.addOnce((s)=>{
+      const vrm = s.metadata.vrm[0]
+      vrm.firstPerson.setup()
     })
   }
-  // async loadVRM(scene) {
-  //   const obj = await BABYLON.SceneLoader.ImportMeshAsync('', '/models/', 'boy.vrm', scene)
-  //   console.log(obj)
-  // }
 }
 
 const app = new App()
