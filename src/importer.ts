@@ -72,28 +72,28 @@ export interface ImporterOptions {
 
     // const materials = (await this._materialImporter.convertGLTFMaterials(gltf)) || undefined;
 
-    // const humanoid = (await this._humanoidImporter.import(gltf)) || undefined;
+    const humanoid = (await this._humanoidImporter.import(loader)) || undefined;
 
-    // const firstPerson = humanoid ? (await this._firstPersonImporter.import(gltf, humanoid)) || undefined : undefined;
+    const firstPerson = humanoid ? (await this._firstPersonImporter.import(loader, humanoid)) || undefined : undefined;
 
-    // const blendShapeProxy = (await this._blendShapeImporter.import(gltf)) || undefined;
+    const blendShapeProxy = (await this._blendShapeImporter.import(loader)) || undefined;
 
     // const lookAt =
     //   firstPerson && blendShapeProxy && humanoid
     //     ? (await this._lookAtImporter.import(gltf, firstPerson, blendShapeProxy, humanoid)) || undefined
     //     : undefined;
 
-    // const springBoneManager = (await this._springBoneImporter.import(gltf)) || undefined;
+    const springBoneManager = (await this._springBoneImporter.import(loader)) || undefined;
 
     return new VRM({
       scene: loader.babylonScene,
       meta,
       // materials,
-      // humanoid,
-      // firstPerson,
-      // blendShapeProxy,
+      humanoid,
+      firstPerson,
+      blendShapeProxy,
       // lookAt,
-      // springBoneManager,
+      springBoneManager,
     });
   }
 }
