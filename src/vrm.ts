@@ -2,11 +2,11 @@ import * as BABYLON from '@babylonjs/core'
 import { GLTF2 } from '@babylonjs/loaders'
 
 import { BlendShapeProxy } from './blendShape/index';
-// import { VRMFirstPerson } from './firstperson';
+import { FirstPerson } from './firstPerson/index';
 import { Humanoid } from './humanoid/index'
 // import { VRMLookAtHead } from './lookat';
 import { Meta } from './meta/index'
-// import { VRMSpringBoneManager } from './springbone';
+import { SpringBoneManager } from './springBone/index';
 // import { deepDispose } from './utils/disposer';
 import { Importer, ImporterOptions } from './importer'
 
@@ -18,10 +18,10 @@ export interface Parameters {
   // scene: THREE.Scene | THREE.Group; // COMPAT: `GLTF.scene` is going to be `THREE.Group` in r114
   humanoid?: Humanoid
   blendShapeProxy?: BlendShapeProxy;
-  // firstPerson?: VRMFirstPerson;
+  firstPerson?: FirstPerson;
   // lookAt?: VRMLookAtHead;
   // materials?: THREE.Material[];
-  // springBoneManager?: VRMSpringBoneManager;
+  springBoneManager?: SpringBoneManager;
   meta?: Meta
 }
 
@@ -49,7 +49,7 @@ export class VRM {
    * } );
    * ```
    *
-   * @param gltf A parsed GLTF object taken from GLTFLoader
+   * @param loader GLTFLoader
    * @param options Options that will be used in importer
    */
   // public static async from(gltf: GLTF2.GLTFLoader, options: ImporterOptions = {}): Promise<VRM> {
@@ -84,7 +84,7 @@ export class VRM {
    * Contains [[VRMFirstPerson]] of the VRM.
    * You can use various feature of the firstPerson field.
    */
-  // public readonly firstPerson?: VRMFirstPerson;
+  public readonly firstPerson?: FirstPerson;
 
   /**
    * Contains [[VRMLookAtHead]] of the VRM.
@@ -108,7 +108,7 @@ export class VRM {
    * A [[VRMSpringBoneManager]] manipulates all spring bones attached on the VRM.
    * Usually you don't have to care about this property.
    */
-  // public readonly springBoneManager?: VRMSpringBoneManager;
+  public readonly springBoneManager?: SpringBoneManager;
 
   /**
    * Create a new VRM instance.
@@ -119,10 +119,10 @@ export class VRM {
     this.scene = params.scene
     this.humanoid = params.humanoid;
     this.blendShapeProxy = params.blendShapeProxy;
-    // this.firstPerson = params.firstPerson;
+    this.firstPerson = params.firstPerson;
     // this.lookAt = params.lookAt;
     // this.materials = params.materials;
-    // this.springBoneManager = params.springBoneManager;
+    this.springBoneManager = params.springBoneManager;
     this.meta = params.meta
   }
 
@@ -133,27 +133,27 @@ export class VRM {
    *
    * @param delta deltaTime
    */
-  // public update(delta: number): void {
-  //   if (this.lookAt) {
-  //     this.lookAt.update(delta);
-  //   }
+  public update(delta: number): void {
+    // if (this.lookAt) {
+    //   this.lookAt.update(delta);
+    // }
 
-  //   if (this.blendShapeProxy) {
-  //     this.blendShapeProxy.update();
-  //   }
+    if (this.blendShapeProxy) {
+      this.blendShapeProxy.update();
+    }
 
-  //   if (this.springBoneManager) {
-  //     this.springBoneManager.lateUpdate(delta);
-  //   }
+    if (this.springBoneManager) {
+      this.springBoneManager.lateUpdate(delta);
+    }
 
-  //   if (this.materials) {
-  //     this.materials.forEach((material: any) => {
-  //       if (material.updateVRMMaterials) {
-  //         material.updateVRMMaterials(delta);
-  //       }
-  //     });
-  //   }
-  // }
+    // if (this.materials) {
+    //   this.materials.forEach((material: any) => {
+    //     if (material.updateVRMMaterials) {
+    //       material.updateVRMMaterials(delta);
+    //     }
+    //   });
+    // }
+  }
 
   // /**
   //  * Dispose everything about the VRM instance.
