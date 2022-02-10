@@ -15,9 +15,6 @@ export class VRMFileLoader extends GLTFFileLoader {
   }
 }
 
-if (SceneLoader) {
-  SceneLoader.RegisterPlugin(new VRMFileLoader())
-}
 const NAME = 'VRM'
 
 // gltf custom loader with some hooks
@@ -31,11 +28,11 @@ export class VRMExtensionLoader implements IGLTFLoaderExtension {
    */
   public enabled = true
   /**
-   * この Mesh index 以降が読み込み対象
+   * This Mesh index and later are to be read
    */
   private meshesFrom = 0
   /**
-   * この TransformNode index 以降が読み込み対象
+   * This TransformNode index and later are read targets
    */
   private transformNodesFrom = 0
 
@@ -69,25 +66,19 @@ export class VRMExtensionLoader implements IGLTFLoaderExtension {
       scene.metadata.vrm = scene.metadata.vrm || []
       scene.metadata.vrm.push(vrm)
 
-      // const manager = new VRMManager(
-      //     this.loader.gltf.extensions[NAME],
-      //     this.loader.babylonScene,
-      //     this.meshesFrom,
-      //     this.transformNodesFrom,
-      // );
 
       this.loader.babylonScene.onDisposeObservable.add(() => {
         // Scene dispose 時に Manager も破棄する
         vrm.dispose()
-        this.loader.babylonScene.metadata.vrmManagers = []
+        this.loader.babylonScene.metadata.vrm = []
       })
     })
+
+   
   }
 
   public loadNodeAsync(context: string, node: INode, assign: (babylonMesh: TransformNode) => void): Promise<TransformNode> {
     return this.loader.loadNodeAsync(context, node, function (babylonMesh) {
-
-      console.log('node:%O', node)
       assign(babylonMesh);
   });
   }
@@ -102,7 +93,7 @@ export class VRMExtensionLoader implements IGLTFLoaderExtension {
   //     if (!primitive.extras || !primitive.extras.targetNames) {
   //         return null;
   //     }
-  //     // まだ MorphTarget が生成されていないので、メタ情報にモーフターゲット情報を入れておく
+  //     // Since MorphTarget has not been generated yet, put the morph target information in the meta information.
   //     babylonMesh.metadata = babylonMesh.metadata || {};
   //     babylonMesh.metadata.vrmTargetNames = primitive.extras.targetNames;
   //     return null;
@@ -118,7 +109,7 @@ export class VRMExtensionLoader implements IGLTFLoaderExtension {
   //     babylonDrawMode: number,
   //     assign: (babylonMaterial: Material) => void,
   // ): Nullable<Promise<Material>> {
-  //     // ジェネレータでマテリアルを生成する
+  //     // Generate material with generator
   //     return (new VRMMaterialGenerator(this.loader)).generate(context, material, mesh, babylonDrawMode, assign);
   // }
 }
@@ -131,6 +122,9 @@ GLTFLoader.RegisterExtension(NAME, loader => {
   return new VRMExtensionLoader(loader)
 })
 
+if (SceneLoader) {
+  SceneLoader.RegisterPlugin(new VRMFileLoader())
+}
 export * from './vrm'
 export * from './importer'
 // export * from './VRMUtils';
