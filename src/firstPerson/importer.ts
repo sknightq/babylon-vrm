@@ -36,7 +36,7 @@ export class FirstPersonImporter {
     }
 
     if (!firstPersonBone) {
-      console.warn('VRMFirstPersonImporter: Could not find firstPersonBone of the VRM')
+      console.warn('FirstPersonImporter: Could not find firstPersonBone of the VRM')
       return null
     }
 
