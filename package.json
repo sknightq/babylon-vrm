@@ -1,6 +1,6 @@
 {
-  "name": "babylon-vrm",
-  "version": "1.0.0",
+  "name": "@sknight/babylon-vrm",
+  "version": "0.0.1",
   "description": "load vrm file using with babylonjs",
   "main": "index.ts",
   "devDependencies": {
