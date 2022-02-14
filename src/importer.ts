@@ -5,9 +5,10 @@ import { BlendShapeImporter } from './blendShape/importer';
 import { FirstPersonImporter } from './firstPerson/importer';
 import { HumanoidImporter } from './humanoid/importer';
 import { LookAtImporter } from './lookAt/importer';
-import { MaterialImporter } from './material/importer';
+// import { MaterialImporter } from './material/importer';
 import { MetaImporter } from './meta/importer';
 import { SpringBoneImporter } from './springBone/importer';
+import { traverse } from './utils/traverse';
 import { VRM } from './vrm';
 
 export interface ImporterOptions {
@@ -16,7 +17,7 @@ export interface ImporterOptions {
   humanoidImporter?: HumanoidImporter;
   blendShapeImporter?: BlendShapeImporter;
   firstPersonImporter?: FirstPersonImporter;
-  materialImporter?: MaterialImporter;
+  // materialImporter?: MaterialImporter;
   springBoneImporter?: SpringBoneImporter;
 }
 
@@ -29,7 +30,7 @@ export interface ImporterOptions {
   protected readonly _lookAtImporter: LookAtImporter;
   protected readonly _humanoidImporter: HumanoidImporter;
   protected readonly _firstPersonImporter: FirstPersonImporter;
-  protected readonly _materialImporter: MaterialImporter;
+  // protected readonly _materialImporter: MaterialImporter;
   protected readonly _springBoneImporter: SpringBoneImporter;
 
   /**
@@ -43,34 +44,43 @@ export interface ImporterOptions {
     this._lookAtImporter = options.lookAtImporter || new LookAtImporter();
     this._humanoidImporter = options.humanoidImporter || new HumanoidImporter();
     this._firstPersonImporter = options.firstPersonImporter || new FirstPersonImporter();
-    this._materialImporter = options.materialImporter || new MaterialImporter();
+    // this._materialImporter = options.materialImporter || new MaterialImporter();
     this._springBoneImporter = options.springBoneImporter || new SpringBoneImporter();
   }
 
   /**
-   * Receive a GLTF object retrieved from `THREE.GLTFLoader` and create a new [[VRM]] instance.
+   * Receive a GLTF loader retrieved from `@babylonjs/loaders/glTF/2.0` and create a new [[VRM]] instance.
    *
-   * @param gltf A parsed result of GLTF taken from GLTFLoader
+   * @param loader A GLTFLoader which store the gltf object 
    */
   public async import(loader: GLTFLoader): Promise<VRM> {
     if (loader.gltf.extensions === undefined || loader.gltf.extensions.VRM === undefined) {
       throw new Error('Could not find VRM extension on the GLTF');
     }
     // const scene = gltf.scene;
-
     // scene.updateMatrixWorld(false);
 
-    // // Skinned object should not be frustumCulled
-    // // Since pre-skinned position might be outside of view
+
+    // TODO: The frustumCulled of mesh will get rendered every frame even if it is not in the frustum of the camera. The Threejs default value is true to avioding external rendered.
+    // Babylon set the defualt value will not passed to GPU, it's done CPU side.
+    // ThreeJS: https://threejs.org/docs/?q=Object#api/zh/core/Object3D.frustumCulled
+    // Babylonjs https://doc.babylonjs.com/divingDeeper/scene/optimize_your_scene#changing-mesh-culling-strategy
+
+    // Skinned object should not be frustumCulled
+    // Since pre-skinned position might be outside of view
     // scene.traverse((object3d) => {
     //   if ((object3d as any).isMesh) {
     //     object3d.frustumCulled = false;
     //   }
     // });
 
+
     const meta = (await this._metaImporter.import(loader)) || undefined;
 
-    // const materials = (await this._materialImporter.convertGLTFMaterials(gltf)) || undefined;
+    // const materials = (await this._materialImporter.convertGLTFMaterials(loader)) || undefined;
+    // https://github.com/virtual-cast/babylon-mtoon-material
+    // mToon动画材质
+    const materials = undefined
 
     const humanoid = (await this._humanoidImporter.import(loader)) || undefined;
 
