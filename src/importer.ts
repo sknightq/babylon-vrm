@@ -78,10 +78,10 @@ export interface ImporterOptions {
 
     const blendShapeProxy = (await this._blendShapeImporter.import(loader)) || undefined;
 
-    // const lookAt =
-    //   firstPerson && blendShapeProxy && humanoid
-    //     ? (await this._lookAtImporter.import(gltf, firstPerson, blendShapeProxy, humanoid)) || undefined
-    //     : undefined;
+    const lookAt =
+      firstPerson && blendShapeProxy && humanoid
+        ? (await this._lookAtImporter.import(loader, firstPerson, blendShapeProxy, humanoid)) || undefined
+        : undefined;
 
     const springBoneManager = (await this._springBoneImporter.import(loader)) || undefined;
 
@@ -92,7 +92,7 @@ export interface ImporterOptions {
       humanoid,
       firstPerson,
       blendShapeProxy,
-      // lookAt,
+      lookAt,
       springBoneManager,
     });
   }
