@@ -4,7 +4,7 @@ import { GLTF2 } from '@babylonjs/loaders'
 import { BlendShapeProxy } from './blendShape/index';
 import { FirstPerson } from './firstPerson/index';
 import { Humanoid } from './humanoid/index'
-// import { VRMLookAtHead } from './lookat';
+import { LookAtHead } from './lookAt/index';
 import { Meta } from './meta/index'
 import { SpringBoneManager } from './springBone/index';
 // import { deepDispose } from './utils/disposer';
@@ -19,7 +19,7 @@ export interface Parameters {
   humanoid?: Humanoid
   blendShapeProxy?: BlendShapeProxy;
   firstPerson?: FirstPerson;
-  // lookAt?: VRMLookAtHead;
+  lookAt?: LookAtHead;
   // materials?: THREE.Material[];
   springBoneManager?: SpringBoneManager;
   meta?: Meta
@@ -90,7 +90,7 @@ export class VRM {
    * Contains [[VRMLookAtHead]] of the VRM.
    * You might want to use [[VRMLookAtHead.target]] to control the eye direction of your VRMs.
    */
-  // public readonly lookAt?: VRMLookAtHead;
+  public readonly lookAt?: LookAtHead;
 
   /**
    * Contains materials of the VRM.
@@ -120,7 +120,7 @@ export class VRM {
     this.humanoid = params.humanoid;
     this.blendShapeProxy = params.blendShapeProxy;
     this.firstPerson = params.firstPerson;
-    // this.lookAt = params.lookAt;
+    this.lookAt = params.lookAt;
     // this.materials = params.materials;
     this.springBoneManager = params.springBoneManager;
     this.meta = params.meta
@@ -134,9 +134,9 @@ export class VRM {
    * @param delta deltaTime
    */
   public update(delta: number): void {
-    // if (this.lookAt) {
-    //   this.lookAt.update(delta);
-    // }
+    if (this.lookAt) {
+      this.lookAt.update(delta);
+    }
 
     if (this.blendShapeProxy) {
       this.blendShapeProxy.update();
