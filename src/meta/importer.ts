@@ -18,7 +18,6 @@ export class MetaImporter {
   }
 
   public async import(loader: GLTFLoader): Promise<Meta | null> {
-    console.log(loader)
     // const vrmExt: VRMSchema.VRM | undefined = gltf.parent.extensions.VRM;
     const vrmExt: VRMSchema.VRM | undefined = loader.gltf.extensions.VRM;
     if (!vrmExt) {

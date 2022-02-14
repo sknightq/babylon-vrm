@@ -3,57 +3,55 @@ import { GLTFSchema, VRMSchema } from '../types'
 import { GLTFLoader } from '@babylonjs/loaders/glTF/2.0'
 import { gltfExtractPrimitivesFromNode } from '../utils/gltfExtractPrimitivesFromNode'
 import { renameMaterialProperty } from '../utils/renameMaterialProperty'
-import { BlendShapeGroup } from './group'
-import { BlendShapeProxy } from './proxy'
+import { ExpressionGroup } from './group'
+import { ExpressionProxy } from './proxy'
 
 /**
- * An importer that imports a [[VRMBlendShape]] from a VRM extension of a GLTF.
+ * An importer that imports a [[VRMExpression]] from a VRM extension of a GLTF.
  */
-export class BlendShapeImporter {
+export class ExpressionImporter {
   /**
-   * Import a [[VRMBlendShape]] from a VRM.
+   * Import a [[VRMExpression]] from a VRM.
    *
    * @param gltf A parsed result of GLTF taken from GLTFLoader
    */
-  public async import(loader: GLTFLoader): Promise<BlendShapeProxy | null> {
+  public async import(loader: GLTFLoader): Promise<ExpressionProxy | null> {
     // const vrmExt: VRMSchema.VRM | undefined = gltf.parser.json.extensions?.VRM;
     const vrmExt: VRMSchema.VRM | undefined = loader.gltf.extensions?.VRM
     if (!vrmExt) {
       return null
     }
-    if (!vrmExt) {
+    console.log(vrmExt)
+
+    const schemaExpression: VRMSchema.Expression | undefined = vrmExt.blendShapeMaster
+    if (!schemaExpression) {
       return null
     }
 
-    const schemaBlendShape: VRMSchema.BlendShape | undefined = vrmExt.blendShapeMaster
-    if (!schemaBlendShape) {
-      return null
+    const expression = new ExpressionProxy()
+
+    const expressionGroups: VRMSchema.ExpressionGroup[] | undefined = schemaExpression.blendShapeGroups
+    if (!expressionGroups) {
+      return expression
     }
 
-    const blendShape = new BlendShapeProxy()
-
-    const blendShapeGroups: VRMSchema.BlendShapeGroup[] | undefined = schemaBlendShape.blendShapeGroups
-    if (!blendShapeGroups) {
-      return blendShape
-    }
-
-    const blendShapePresetMap: { [presetName in VRMSchema.BlendShapePresetName]?: string } = {}
+    const expressionPresetMap: { [presetName in VRMSchema.ExpressionPresetName]?: string } = {}
 
     await Promise.all(
-      blendShapeGroups.map(async schemaGroup => {
+      expressionGroups.map(async schemaGroup => {
         const name = schemaGroup.name
         if (name === undefined) {
-          console.warn('VRMBlendShapeImporter: One of blendShapeGroups has no name')
+          console.warn('VRMExpressionImporter: One of expressionGroups has no name')
           return
         }
 
-        let presetName: VRMSchema.BlendShapePresetName | undefined
-        if (schemaGroup.presetName && schemaGroup.presetName !== VRMSchema.BlendShapePresetName.Unknown && !blendShapePresetMap[schemaGroup.presetName]) {
+        let presetName: VRMSchema.ExpressionPresetName | undefined
+        if (schemaGroup.presetName && schemaGroup.presetName !== VRMSchema.ExpressionPresetName.Unknown && !expressionPresetMap[schemaGroup.presetName]) {
           presetName = schemaGroup.presetName
-          blendShapePresetMap[schemaGroup.presetName] = name
+          expressionPresetMap[schemaGroup.presetName] = name
         }
 
-        const group = new BlendShapeGroup(name)
+        const group = new ExpressionGroup(name)
         // gltf.scene.add(group);
         group.isBinary = schemaGroup.isBinary || false
 
@@ -78,7 +76,7 @@ export class BlendShapeImporter {
 
                 // check if the mesh has the target morph target
                 // if (!primitives.every(primitive => Array.isArray(primitive.morphTargetManager.influences) && morphTargetIndex < primitive.morphTargetManager.influences.length)) {
-                //   console.warn(`BlendShapeImporter: ${schemaGroup.name} attempts to index ${morphTargetIndex}th morph but not found.`)
+                //   console.warn(`ExpressionImporter: ${schemaGroup.name} attempts to index ${morphTargetIndex}th morph but not found.`)
                 //   return
                 // }
 
@@ -123,10 +121,10 @@ export class BlendShapeImporter {
           })
         }
 
-        blendShape.registerBlendShapeGroup(name, presetName, group)
+        expression.registeExpressionGroup(name, presetName, group)
       })
     )
 
-    return blendShape
+    return expression
   }
 }

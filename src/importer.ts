@@ -1,7 +1,7 @@
 
   
 import { GLTFLoader } from '@babylonjs/loaders/glTF/2.0';
-import { BlendShapeImporter } from './blendShape/importer';
+import { ExpressionImporter } from './expression/importer';
 import { FirstPersonImporter } from './firstPerson/importer';
 import { HumanoidImporter } from './humanoid/importer';
 import { LookAtImporter } from './lookAt/importer';
@@ -15,7 +15,7 @@ export interface ImporterOptions {
   metaImporter?: MetaImporter;
   lookAtImporter?: LookAtImporter;
   humanoidImporter?: HumanoidImporter;
-  blendShapeImporter?: BlendShapeImporter;
+  expressionImporter?: ExpressionImporter;
   firstPersonImporter?: FirstPersonImporter;
   // materialImporter?: MaterialImporter;
   springBoneImporter?: SpringBoneImporter;
@@ -26,7 +26,7 @@ export interface ImporterOptions {
  */
  export class Importer {
   protected readonly _metaImporter: MetaImporter;
-  protected readonly _blendShapeImporter: BlendShapeImporter;
+  protected readonly _expressionImporter: ExpressionImporter;
   protected readonly _lookAtImporter: LookAtImporter;
   protected readonly _humanoidImporter: HumanoidImporter;
   protected readonly _firstPersonImporter: FirstPersonImporter;
@@ -40,7 +40,7 @@ export interface ImporterOptions {
    */
   public constructor(options: ImporterOptions = {}) {
     this._metaImporter = options.metaImporter || new MetaImporter();
-    this._blendShapeImporter = options.blendShapeImporter || new BlendShapeImporter();
+    this._expressionImporter = options.expressionImporter || new ExpressionImporter();
     this._lookAtImporter = options.lookAtImporter || new LookAtImporter();
     this._humanoidImporter = options.humanoidImporter || new HumanoidImporter();
     this._firstPersonImporter = options.firstPersonImporter || new FirstPersonImporter();
@@ -86,11 +86,11 @@ export interface ImporterOptions {
 
     const firstPerson = humanoid ? (await this._firstPersonImporter.import(loader, humanoid)) || undefined : undefined;
 
-    const blendShapeProxy = (await this._blendShapeImporter.import(loader)) || undefined;
+    const expressionProxy = (await this._expressionImporter.import(loader)) || undefined;
 
     const lookAt =
-      firstPerson && blendShapeProxy && humanoid
-        ? (await this._lookAtImporter.import(loader, firstPerson, blendShapeProxy, humanoid)) || undefined
+      firstPerson && expressionProxy && humanoid
+        ? (await this._lookAtImporter.import(loader, firstPerson, expressionProxy, humanoid)) || undefined
         : undefined;
 
     const springBoneManager = (await this._springBoneImporter.import(loader)) || undefined;
@@ -101,7 +101,7 @@ export interface ImporterOptions {
       // materials,
       humanoid,
       firstPerson,
-      blendShapeProxy,
+      expressionProxy,
       lookAt,
       springBoneManager,
     });

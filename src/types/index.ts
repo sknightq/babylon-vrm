@@ -17,6 +17,8 @@ export type GLTFNode = BABYLON.TransformNode
 
 export type GLTFMesh = BABYLON.Mesh
 
+export type GLTFPrimitive = BABYLON.Mesh
+
 export interface VRMPoseTransform {
   /**
    * Position of the transform.

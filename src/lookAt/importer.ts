@@ -1,11 +1,11 @@
 import { GLTFLoader } from '@babylonjs/loaders/glTF/2.0';
-import { BlendShapeProxy } from '../blendShape';
+import { ExpressionProxy } from '../expression';
 import { FirstPerson } from '../firstPerson';
 import { Humanoid } from '../humanoid';
 import { VRMSchema } from '../types';
 import { CurveMapper } from './curveMapper';
 import { LookAtApplyer } from './applyer';
-import { LookAtBlendShapeApplyer } from './blendShapeApplyer';
+import { LookAtExpressionApplyer } from './expressionApplyer';
 import { LookAtBoneApplyer } from './boneApplyer';
 import { LookAtHead } from './head';
 
@@ -22,13 +22,13 @@ export class LookAtImporter {
    * Import a [[VRMLookAtHead]] from a VRM.
    *
    * @param gltf A parsed result of GLTF taken from GLTFLoader
-   * @param blendShapeProxy A [[VRMBlendShapeProxy]] instance that represents the VRM
+   * @param expressionProxy A [[VRMExpressionProxy]] instance that represents the VRM
    * @param humanoid A [[VRMHumanoid]] instance that represents the VRM
    */
   public import(
     loader: GLTFLoader,
     firstPerson: FirstPerson,
-    blendShapeProxy: BlendShapeProxy,
+    expressionProxy: ExpressionProxy,
     humanoid: Humanoid,
   ): LookAtHead | null {
     const vrmExt: VRMSchema.VRM | undefined = loader.gltf.extensions?.VRM;
@@ -41,13 +41,13 @@ export class LookAtImporter {
       return null;
     }
 
-    const applyer = this._importApplyer(schemaFirstPerson, blendShapeProxy, humanoid);
+    const applyer = this._importApplyer(schemaFirstPerson, expressionProxy, humanoid);
     return new LookAtHead(firstPerson, applyer || undefined);
   }
 
   protected _importApplyer(
     schemaFirstPerson: VRMSchema.FirstPerson,
-    blendShapeProxy: BlendShapeProxy,
+    expressionProxy: ExpressionProxy,
     humanoid: Humanoid,
   ): LookAtApplyer | null {
     const lookAtHorizontalInner = schemaFirstPerson.lookAtHorizontalInner;
@@ -74,15 +74,15 @@ export class LookAtImporter {
           );
         }
       }
-      case VRMSchema.FirstPersonLookAtTypeName.BlendShape: {
+      case VRMSchema.FirstPersonLookAtTypeName.Expression: {
         if (lookAtHorizontalOuter === undefined || lookAtVerticalDown === undefined || lookAtVerticalUp === undefined) {
           return null;
         } else {
-          return new LookAtBlendShapeApplyer(
-            blendShapeProxy,
-            this._importCurveMapperBlendShape(lookAtHorizontalOuter),
-            this._importCurveMapperBlendShape(lookAtVerticalDown),
-            this._importCurveMapperBlendShape(lookAtVerticalUp),
+          return new LookAtExpressionApplyer(
+            expressionProxy,
+            this._importCurveMapperExpression(lookAtHorizontalOuter),
+            this._importCurveMapperExpression(lookAtVerticalDown),
+            this._importCurveMapperExpression(lookAtVerticalUp),
           );
         }
       }
@@ -100,7 +100,7 @@ export class LookAtImporter {
     );
   }
 
-  private _importCurveMapperBlendShape(map: VRMSchema.FirstPersonDegreeMap): CurveMapper {
+  private _importCurveMapperExpression(map: VRMSchema.FirstPersonDegreeMap): CurveMapper {
     return new CurveMapper(typeof map.xRange === 'number' ? DEG2RAD * map.xRange : undefined, map.yRange, map.curve);
   }
 }

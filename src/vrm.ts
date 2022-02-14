@@ -1,6 +1,6 @@
 import * as BABYLON from '@babylonjs/core'
 import { GLTFLoader } from '@babylonjs/loaders/glTF/2.0';
-import { BlendShapeProxy } from './blendShape/index'
+import { ExpressionProxy } from './expression/index'
 import { FirstPerson } from './firstPerson/index'
 import { Humanoid } from './humanoid/index'
 import { LookAtHead } from './lookAt/index'
@@ -15,14 +15,13 @@ import { Importer, ImporterOptions } from './importer'
 export interface Parameters {
   scene: BABYLON.Scene // same as THREE.Scene | THREE.Group in ThreeJS 
   humanoid?: Humanoid
-  blendShapeProxy?: BlendShapeProxy
+  expressionProxy?: ExpressionProxy
   firstPerson?: FirstPerson
   lookAt?: LookAtHead
   materials?: BABYLON.Material[];
   springBoneManager?: SpringBoneManager
   meta?: Meta
 }
-
 /**
  * A class that represents a single VRM model.
  * See the documentation of [[VRM.from]] for the most basic use of VRM.
@@ -66,7 +65,7 @@ export class VRM {
    * You might want to control these facial expressions via [[VRMBlendShapeProxy.setValue]].
    */
   // TODO: rename the blendShape to expression
-  public readonly blendShapeProxy?: BlendShapeProxy
+  public readonly expressionProxy?: ExpressionProxy
 
   /**
    * Specification: https://github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_vrm-1.0-beta/firstPerson.md
@@ -109,7 +108,7 @@ export class VRM {
   public constructor(params: Parameters) {
     this.scene = params.scene
     this.humanoid = params.humanoid
-    this.blendShapeProxy = params.blendShapeProxy
+    this.expressionProxy = params.expressionProxy
     this.firstPerson = params.firstPerson
     this.lookAt = params.lookAt
     this.materials = params.materials;
@@ -129,8 +128,8 @@ export class VRM {
       this.lookAt.update(delta)
     }
 
-    if (this.blendShapeProxy) {
-      this.blendShapeProxy.update()
+    if (this.expressionProxy) {
+      this.expressionProxy.update()
     }
 
     if (this.springBoneManager) {

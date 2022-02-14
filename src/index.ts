@@ -122,7 +122,7 @@ if (SceneLoader) {
 export * from './vrm'
 export * from './importer'
 // export * from './utils';
-export * from './blendShape'
+export * from './expression'
 // export * from './debug';
 export * from './firstPerson'
 export * from './humanoid'

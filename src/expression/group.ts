@@ -1,13 +1,13 @@
 import * as BABYLON from '@babylonjs/core'
 import { GLTFPrimitive } from '../types'
 
-export interface BlendShapeBind {
+export interface ExpressionBind {
   meshes: GLTFPrimitive[]
   morphTargetIndex: number
   weight: number
 }
 
-enum BlendShapeMaterialValueType {
+enum ExpressionMaterialValueType {
   NUMBER,
   VECTOR2,
   VECTOR3,
@@ -15,13 +15,13 @@ enum BlendShapeMaterialValueType {
   COLOR3
 }
 
-export interface BlendShapeMaterialValue {
+export interface ExpressionMaterialValue {
   material: BABYLON.Material
   propertyName: string
   defaultValue: number | BABYLON.Vector2 | BABYLON.Vector3 | BABYLON.Quaternion | BABYLON.Color3
   targetValue: number | BABYLON.Vector2 | BABYLON.Vector3 | BABYLON.Quaternion | BABYLON.Color3
   deltaValue: number | BABYLON.Vector2 | BABYLON.Vector3 | BABYLON.Quaternion | BABYLON.Color3 // targetValue - defaultValue
-  type: BlendShapeMaterialValueType
+  type: ExpressionMaterialValueType
 }
 
 const _v2 = new BABYLON.Vector2()
@@ -31,22 +31,22 @@ const _color = new BABYLON.Color3()
 
 // animationMixer の監視対象は、Scene の中に入っている必要がある。
 // そのため、表示オブジェクトではないけれど、Object3D を継承して Scene に投入できるようにする。
-export class BlendShapeGroup extends BABYLON.TransformNode {
+export class ExpressionGroup extends BABYLON.TransformNode {
   public weight = 0.0
   public isBinary = false
 
-  private _binds: BlendShapeBind[] = []
-  private _materialValues: BlendShapeMaterialValue[] = []
+  private _binds: ExpressionBind[] = []
+  private _materialValues: ExpressionMaterialValue[] = []
   type: string
   name: string
   visible: boolean
 
   constructor(expressionName: string) {
     super(`${expressionName}`)
-    this.name = `BlendShapeController_${expressionName}`
+    this.name = `ExpressionController_${expressionName}`
 
     // traverse 時の救済手段として Object3D ではないことを明示しておく
-    this.type = 'BlendShapeController'
+    this.type = 'ExpressionController'
     // 表示目的のオブジェクトではないので、負荷軽減のために visible を false にしておく。
     // これにより、このインスタンスに対する毎フレームの matrix 自動計算を省略できる。
     this.visible = false
@@ -79,23 +79,23 @@ export class BlendShapeGroup extends BABYLON.TransformNode {
     }
     value = args.defaultValue || value
 
-    let type: BlendShapeMaterialValueType
+    let type: ExpressionMaterialValueType
     let defaultValue: number | BABYLON.Vector2 | BABYLON.Vector3 | BABYLON.Quaternion | BABYLON.Color3
     let targetValue: number | BABYLON.Vector2 | BABYLON.Vector3 | BABYLON.Quaternion | BABYLON.Color3
     let deltaValue: number | BABYLON.Vector2 | BABYLON.Vector3 | BABYLON.Quaternion | BABYLON.Color3
 
     if (value.isVector2) {
-      type = BlendShapeMaterialValueType.VECTOR2
+      type = ExpressionMaterialValueType.VECTOR2
       defaultValue = (value as BABYLON.Vector2).clone()
       targetValue = new BABYLON.Vector2().fromArray(args.targetValue)
       deltaValue = targetValue.clone().subtract(defaultValue)
     } else if (value.isVector3) {
-      type = BlendShapeMaterialValueType.VECTOR3
+      type = ExpressionMaterialValueType.VECTOR3
       defaultValue = (value as BABYLON.Vector3).clone()
       targetValue = new BABYLON.Vector3().fromArray(args.targetValue)
       deltaValue = targetValue.clone().subtract(defaultValue)
     } else if (value.isVector4) {
-      type = BlendShapeMaterialValueType.Quaternion
+      type = ExpressionMaterialValueType.Quaternion
       defaultValue = (value as BABYLON.Quaternion).clone()
 
       // vectorProperty and targetValue index is different from each other
@@ -117,12 +117,12 @@ export class BlendShapeGroup extends BABYLON.TransformNode {
       targetValue = BABYLON.Quaternion.FromArray([args.targetValue[2], args.targetValue[3], args.targetValue[0], args.targetValue[1]])
       deltaValue = targetValue.clone().subtract(defaultValue)
     } else if (value.isColor) {
-      type = BlendShapeMaterialValueType.COLOR3
+      type = ExpressionMaterialValueType.COLOR3
       defaultValue = (value as BABYLON.Color3).clone()
       targetValue = new BABYLON.Color3().fromArray(args.targetValue)
       deltaValue = targetValue.clone().subtract(defaultValue)
     } else {
-      type = BlendShapeMaterialValueType.NUMBER
+      type = ExpressionMaterialValueType.NUMBER
       defaultValue = value as number
       targetValue = args.targetValue[0]
       deltaValue = targetValue - defaultValue
@@ -160,19 +160,19 @@ export class BlendShapeGroup extends BABYLON.TransformNode {
         return
       } // TODO: we should kick this at `addMaterialValue`
 
-      if (materialValue.type === BlendShapeMaterialValueType.NUMBER) {
+      if (materialValue.type === ExpressionMaterialValueType.NUMBER) {
         const deltaValue = materialValue.deltaValue as number
         ;(materialValue.material as any)[materialValue.propertyName] += deltaValue * w
-      } else if (materialValue.type === BlendShapeMaterialValueType.VECTOR2) {
+      } else if (materialValue.type === ExpressionMaterialValueType.VECTOR2) {
         const deltaValue = materialValue.deltaValue as BABYLON.Vector2
         ;(materialValue.material as any)[materialValue.propertyName].add(_v2.copyFrom(deltaValue).multiplyByFloats(w, w))
-      } else if (materialValue.type === BlendShapeMaterialValueType.VECTOR3) {
+      } else if (materialValue.type === ExpressionMaterialValueType.VECTOR3) {
         const deltaValue = materialValue.deltaValue as BABYLON.Vector3
         ;(materialValue.material as any)[materialValue.propertyName].add(_v3.copyFrom(deltaValue).multiplyByFloats(w, w, w))
-      } else if (materialValue.type === BlendShapeMaterialValueType.Quaternion) {
+      } else if (materialValue.type === ExpressionMaterialValueType.Quaternion) {
         const multiplyDeltaValue = BABYLON.Quaternion.FromArray([materialValue.deltaValue[0] * w, materialValue.deltaValue[1] * w, materialValue.deltaValue[2] * w, materialValue.deltaValue[3] * w])
         ;(materialValue.material as any)[materialValue.propertyName].add(_v4.copyFrom(multiplyDeltaValue))
-      } else if (materialValue.type === BlendShapeMaterialValueType.COLOR3) {
+      } else if (materialValue.type === ExpressionMaterialValueType.COLOR3) {
         const multiplyDeltaValue = BABYLON.Color3.FromArray([materialValue.deltaValue[0] * w, materialValue.deltaValue[1] * w, materialValue.deltaValue[2] * w])
         ;(materialValue.material as any)[materialValue.propertyName].add(_color.copyFrom(multiplyDeltaValue))
       }
@@ -202,19 +202,19 @@ export class BlendShapeGroup extends BABYLON.TransformNode {
         return
       } // TODO: we should kick this at `addMaterialValue`
 
-      if (materialValue.type === BlendShapeMaterialValueType.NUMBER) {
+      if (materialValue.type === ExpressionMaterialValueType.NUMBER) {
         const defaultValue = materialValue.defaultValue as number
         ;(materialValue.material as any)[materialValue.propertyName] = defaultValue
-      } else if (materialValue.type === BlendShapeMaterialValueType.VECTOR2) {
+      } else if (materialValue.type === ExpressionMaterialValueType.VECTOR2) {
         const defaultValue = materialValue.defaultValue as BABYLON.Vector2
         ;(materialValue.material as any)[materialValue.propertyName].copy(defaultValue)
-      } else if (materialValue.type === BlendShapeMaterialValueType.VECTOR3) {
+      } else if (materialValue.type === ExpressionMaterialValueType.VECTOR3) {
         const defaultValue = materialValue.defaultValue as BABYLON.Vector3
         ;(materialValue.material as any)[materialValue.propertyName].copy(defaultValue)
-      } else if (materialValue.type === BlendShapeMaterialValueType.Quaternion) {
+      } else if (materialValue.type === ExpressionMaterialValueType.Quaternion) {
         const defaultValue = materialValue.defaultValue as BABYLON.Quaternion
         ;(materialValue.material as any)[materialValue.propertyName].copy(defaultValue)
-      } else if (materialValue.type === BlendShapeMaterialValueType.COLOR3) {
+      } else if (materialValue.type === ExpressionMaterialValueType.COLOR3) {
         const defaultValue = materialValue.defaultValue as BABYLON.Color3
         ;(materialValue.material as any)[materialValue.propertyName].copy(defaultValue)
       }

@@ -8,7 +8,7 @@ export namespace VRMSchema {
    * VRM extension is for 3d humanoid avatars (and models) in VR applications.
    */
   export interface VRM {
-    blendShapeMaster?: BlendShape;
+    blendShapeMaster?: Expression;
     /**
      * Version of exporter that vrm created. UniVRM-0.53.0
      */
@@ -28,15 +28,15 @@ export namespace VRMSchema {
   /**
    * BlendShapeAvatar of UniVRM
    */
-  export interface BlendShape {
-    blendShapeGroups?: BlendShapeGroup[];
+  export interface Expression {
+    blendShapeGroups?: ExpressionGroup[];
   }
 
-  export interface BlendShapeGroup {
+  export interface ExpressionGroup {
     /**
      * Low level blendshape references.
      */
-    binds?: BlendShapeBind[];
+    binds?: ExpressionBind[];
     /**
      * 0 or 1. Do not allow an intermediate value. Value should rounded
      */
@@ -44,7 +44,7 @@ export namespace VRMSchema {
     /**
      * Material animation references.
      */
-    materialValues?: BlendShapeMaterialbind[];
+    materialValues?: ExpressionMaterialbind[];
     /**
      * Expression name
      */
@@ -52,10 +52,10 @@ export namespace VRMSchema {
     /**
      * Predefined Expression name
      */
-    presetName?: BlendShapePresetName;
+    presetName?: ExpressionPresetName;
   }
 
-  export interface BlendShapeBind {
+  export interface ExpressionBind {
     index?: number;
     mesh?: number;
     /**
@@ -64,7 +64,7 @@ export namespace VRMSchema {
     weight?: number;
   }
 
-  export interface BlendShapeMaterialbind {
+  export interface ExpressionMaterialbind {
     materialName?: string;
     propertyName?: string;
     targetValue?: number[];
@@ -73,7 +73,7 @@ export namespace VRMSchema {
   /**
    * Predefined Expression name
    */
-  export enum BlendShapePresetName {
+  export enum ExpressionPresetName {
     A = 'a',
     Angry = 'angry',
     Blink = 'blink',
@@ -141,7 +141,7 @@ export namespace VRMSchema {
    * Eye controller mode.
    */
   export enum FirstPersonLookAtTypeName {
-    BlendShape = 'BlendShape',
+    Expression = 'Expression',
     Bone = 'Bone',
   }
 

@@ -29,7 +29,8 @@ class App {
     const vrmScene = await BABYLON.SceneLoader.AppendAsync('/models/', 'boy.vrm', scene)
     vrmScene.onBeforeRenderObservable.addOnce((s)=>{
       const vrm = s.metadata.vrm[0]
-      vrm.firstPerson.setup()
+      console.log(vrm)
+      // vrm.firstPerson.setup()
     })
   }
 }
