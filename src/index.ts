@@ -127,13 +127,13 @@ if (SceneLoader) {
 }
 export * from './vrm'
 export * from './importer'
-// export * from './VRMUtils';
-// export * from './blendshape';
+// export * from './utils';
+export * from './blendShape';
 // export * from './debug';
-// export * from './firstperson';
+export * from './firstPerson';
 export * from './humanoid';
-// export * from './lookat';
-// export * from './springbone';
-// export * from './types';
+export * from './lookAt';
+export * from './springBone';
+export * from './types';
 // export * from './material';
 export * from './meta'
