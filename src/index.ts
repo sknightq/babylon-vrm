@@ -66,22 +66,19 @@ export class VRMExtensionLoader implements IGLTFLoaderExtension {
       scene.metadata.vrm = scene.metadata.vrm || []
       scene.metadata.vrm.push(vrm)
 
-
       this.loader.babylonScene.onDisposeObservable.add(() => {
         // Scene dispose 時に Manager も破棄する
         vrm.dispose()
         this.loader.babylonScene.metadata.vrm = []
       })
     })
-
-   
   }
 
-  public loadNodeAsync(context: string, node: INode, assign: (babylonMesh: TransformNode) => void): Promise<TransformNode> {
-    return this.loader.loadNodeAsync(context, node, function (babylonMesh) {
-      assign(babylonMesh);
-  });
-  }
+  // public loadNodeAsync(context: string, node: INode, assign: (babylonMesh: TransformNode) => void): Promise<TransformNode> {
+  //   return this.loader.loadNodeAsync(context, node, function (babylonMesh) {
+  //     assign(babylonMesh);
+  // });
+  // }
   // /**
   //  * @inheritdoc
   //  */
@@ -115,25 +112,22 @@ export class VRMExtensionLoader implements IGLTFLoaderExtension {
 }
 
 GLTFLoader.RegisterExtension(NAME, loader => {
-  // console.log(loader)
-  // VRM.from(loader).then(vrm=>{
-  //   console.log('vrm:%O', vrm)
-  // })
   return new VRMExtensionLoader(loader)
 })
 
 if (SceneLoader) {
   SceneLoader.RegisterPlugin(new VRMFileLoader())
 }
+
 export * from './vrm'
 export * from './importer'
 // export * from './utils';
-export * from './blendShape';
+export * from './blendShape'
 // export * from './debug';
-export * from './firstPerson';
-export * from './humanoid';
-export * from './lookAt';
-export * from './springBone';
-export * from './types';
+export * from './firstPerson'
+export * from './humanoid'
+export * from './lookAt'
+export * from './springBone'
+export * from './types'
 // export * from './material';
 export * from './meta'
