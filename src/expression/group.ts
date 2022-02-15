@@ -170,10 +170,10 @@ export class ExpressionGroup extends BABYLON.TransformNode {
         const deltaValue = materialValue.deltaValue as BABYLON.Vector3
         ;(materialValue.material as any)[materialValue.propertyName].add(_v3.copyFrom(deltaValue).multiplyByFloats(w, w, w))
       } else if (materialValue.type === ExpressionMaterialValueType.Quaternion) {
-        const multiplyDeltaValue = BABYLON.Quaternion.FromArray([materialValue.deltaValue[0] * w, materialValue.deltaValue[1] * w, materialValue.deltaValue[2] * w, materialValue.deltaValue[3] * w])
+        const multiplyDeltaValue = BABYLON.Quaternion.FromArray([(materialValue.deltaValue as any)[0] * w, (materialValue.deltaValue as any)[1] * w, (materialValue.deltaValue as any)[2] * w, (materialValue.deltaValue as any)[3] * w])
         ;(materialValue.material as any)[materialValue.propertyName].add(_v4.copyFrom(multiplyDeltaValue))
       } else if (materialValue.type === ExpressionMaterialValueType.COLOR3) {
-        const multiplyDeltaValue = BABYLON.Color3.FromArray([materialValue.deltaValue[0] * w, materialValue.deltaValue[1] * w, materialValue.deltaValue[2] * w])
+        const multiplyDeltaValue = BABYLON.Color3.FromArray([(materialValue.deltaValue as any)[0] * w, (materialValue.deltaValue as any)[1] * w, (materialValue.deltaValue as any)[2] * w])
         ;(materialValue.material as any)[materialValue.propertyName].add(_color.copyFrom(multiplyDeltaValue))
       }
 
