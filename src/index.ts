@@ -1,6 +1,5 @@
-import { TransformNode } from '@babylonjs/core'
-import { SceneLoader } from '@babylonjs/core/Loading/sceneLoader'
-import { GLTFLoader, IGLTFLoaderExtension, INode } from '@babylonjs/loaders/glTF/2.0'
+import * as BABYLON from '@babylonjs/core'
+import { GLTFLoader, IGLTFLoaderExtension } from '@babylonjs/loaders/glTF/2.0'
 import { GLTFFileLoader } from '@babylonjs/loaders/glTF/glTFFileLoader'
 import { VRM } from './vrm'
 
@@ -115,8 +114,8 @@ GLTFLoader.RegisterExtension(NAME, loader => {
   return new VRMExtensionLoader(loader)
 })
 
-if (SceneLoader) {
-  SceneLoader.RegisterPlugin(new VRMFileLoader())
+if (BABYLON.SceneLoader) {
+  BABYLON.SceneLoader.RegisterPlugin(new VRMFileLoader())
 }
 
 export * from './vrm'
