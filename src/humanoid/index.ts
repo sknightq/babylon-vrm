@@ -1,13 +1,11 @@
-import * as BABYLON from '@babylonjs/core';
-import { GLTFNode, RawVector3, RawVector4, VRMPose, VRMSchema } from '../types';
-import { quatInvertCompat } from '../utils/quatInvertCompat';
-import { HumanBone } from './humanBone';
-import { HumanBoneArray } from './humanBoneArray';
-import { HumanBones } from './humanBones';
-import { HumanDescription } from './humanDescription';
+import * as BABYLON from '@babylonjs/core'
+import { GLTFNode, RawVector3, RawVector4, VRMPose, VRMSchema } from '../types'
+import { quatInvertCompat } from '../utils/quatInvertCompat'
+import { HumanBone, HumanBoneArray, HumanBones } from './humanBone'
+import { HumanDescription } from './humanDescription'
 
-const _v3A = new BABYLON.Vector3();
-let _quatA = new BABYLON.Quaternion();
+const _v3A = new BABYLON.Vector3()
+let _quatA = new BABYLON.Quaternion()
 
 /**
  * A class represents humanoid of a VRM.
@@ -17,18 +15,18 @@ export class Humanoid {
    * A [[VRMHumanBones]] that contains all the human bones of the VRM.
    * You might want to get these bones using [[VRMHumanoid.getBone]].
    */
-  public readonly humanBones: HumanBones;
+  public readonly humanBones: HumanBones
 
   /**
    * A [[VRMHumanDescription]] that represents properties of the humanoid.
    */
-  public readonly humanDescription: HumanDescription;
+  public readonly humanDescription: HumanDescription
 
   /**
    * A [[VRMPose]] that is its default state.
    * Note that it's not compatible with `setPose` and `getPose`, since it contains non-relative values of each local transforms.
    */
-  public readonly restPose: VRMPose = {};
+  public readonly restPose: VRMPose = {}
 
   /**
    * Create a new [[VRMHumanoid]].
@@ -36,10 +34,10 @@ export class Humanoid {
    * @param humanDescription A [[VRMHumanDescription]] that represents properties of the new humanoid
    */
   public constructor(boneArray: HumanBoneArray, humanDescription: HumanDescription) {
-    this.humanBones = this._createHumanBones(boneArray);
-    this.humanDescription = humanDescription;
+    this.humanBones = this._createHumanBones(boneArray)
+    this.humanDescription = humanDescription
 
-    this.restPose = this.getPose();
+    this.restPose = this.getPose()
   }
 
   /**
@@ -48,29 +46,29 @@ export class Humanoid {
    * Each transform is a local transform relative from rest pose (T-pose).
    */
   public getPose(): VRMPose {
-    const pose: VRMPose = {};
-    Object.keys(this.humanBones).forEach((vrmBoneName) => {
-      const node = this.getBoneNode(vrmBoneName as VRMSchema.HumanoidBoneName)!;
+    const pose: VRMPose = {}
+    Object.keys(this.humanBones).forEach(vrmBoneName => {
+      const node = this.getBoneNode(vrmBoneName as VRMSchema.HumanoidBoneName)!
 
       // Ignore when there are no bone on the VRMHumanoid
       if (!node) {
-        return;
+        return
       }
 
       // When there are two or more bones in a same name, we are not going to overwrite existing one
       if (pose[vrmBoneName]) {
-        return;
+        return
       }
 
       // Take a diff from restPose
       // note that restPose also will use getPose to initialize itself
-      _v3A.set(0, 0, 0);
-      // _quatA.identity();
+      _v3A.set(0, 0, 0)
+      // create a identity quaternion (单位四元组)
       _quatA = BABYLON.Quaternion.Identity()
 
-      const restState = this.restPose[vrmBoneName];
+      const restState = this.restPose[vrmBoneName]
       if (restState?.position) {
-        _v3A.fromArray(restState.position).negate();
+        _v3A.fromArray(restState.position).negate()
       }
       if (restState?.rotation) {
         // quatInvertCompat(_quatA.fromArray(restState.rotation));
@@ -79,19 +77,19 @@ export class Humanoid {
       }
 
       // Get the position / rotation from the node
-      _v3A.add(node.position);
-    
+      _v3A.add(node.position)
+
       // _quatA.premultiply(node.quaternion);
       // rotationQ x _quatA
       // _quatA.premultiply(node.rotationQuaternion);
-      _quatA = node.rotationQuaternion.multiply(_quatA)
+      _quatA = (node.rotationQuaternion as BABYLON.Quaternion).multiply(_quatA)
 
       pose[vrmBoneName] = {
         position: _v3A.asArray() as RawVector3,
-        rotation: _quatA.asArray() as RawVector4,
-      };
-    }, {} as VRMPose);
-    return pose;
+        rotation: _quatA.asArray() as RawVector4
+      }
+    }, {} as VRMPose)
+    return pose
   }
 
   /**
@@ -103,31 +101,31 @@ export class Humanoid {
    * @param poseObject A [[VRMPose]] that represents a single pose
    */
   public setPose(poseObject: VRMPose): void {
-    Object.keys(poseObject).forEach((boneName) => {
-      const state = poseObject[boneName]!;
-      const node = this.getBoneNode(boneName as VRMSchema.HumanoidBoneName);
+    Object.keys(poseObject).forEach(boneName => {
+      const state = poseObject[boneName]!
+      const node = this.getBoneNode(boneName as VRMSchema.HumanoidBoneName)
 
       // Ignore when there are no bone that is defined in the pose on the VRMHumanoid
       if (!node) {
-        return;
+        return
       }
 
-      const restState = this.restPose[boneName];
+      const restState = this.restPose[boneName]
       if (!restState) {
-        return;
+        return
       }
 
       if (state.position) {
-        node.position.fromArray(state.position);
+        node.position.fromArray(state.position)
 
         if (restState.position) {
-          node.position.add(_v3A.fromArray(restState.position));
+          node.position.add(_v3A.fromArray(restState.position))
         }
       }
 
       if (state.rotation) {
         // node.quaternion.fromArray(state.rotation);
-        node.rotationQuaternion = BABYLON.Quaternion.FromArray(state.rotation);
+        node.rotationQuaternion = BABYLON.Quaternion.FromArray(state.rotation)
 
         if (restState.rotation) {
           // node.quaternion.multiply(_quatA.fromArray(restState.rotation));
@@ -135,7 +133,7 @@ export class Humanoid {
           node.rotationQuaternion.multiply(_quatA)
         }
       }
-    });
+    })
   }
 
   /**
@@ -143,21 +141,20 @@ export class Humanoid {
    */
   public resetPose(): void {
     Object.entries(this.restPose).forEach(([boneName, rest]) => {
-      const node = this.getBoneNode(boneName as VRMSchema.HumanoidBoneName);
+      const node = this.getBoneNode(boneName as VRMSchema.HumanoidBoneName)
 
       if (!node) {
-        return;
+        return
       }
 
       if (rest?.position) {
-        node.position.fromArray(rest.position);
+        node.position.fromArray(rest.position)
       }
 
       if (rest?.rotation) {
-        // node.quaternion.fromArray(rest.rotation);
         node.rotationQuaternion = BABYLON.Quaternion.FromArray(rest.rotation)
       }
-    });
+    })
   }
 
   /**
@@ -168,7 +165,7 @@ export class Humanoid {
    * @param name Name of the bone you want
    */
   public getBone(name: VRMSchema.HumanoidBoneName): HumanBone | undefined {
-    return this.humanBones[name][0] ?? undefined;
+    return this.humanBones[name][0] ?? undefined
   }
 
   /**
@@ -180,22 +177,22 @@ export class Humanoid {
    * @param name Name of the bone you want
    */
   public getBones(name: VRMSchema.HumanoidBoneName): HumanBone[] {
-    return this.humanBones[name] ?? [];
+    return this.humanBones[name] ?? []
   }
 
   /**
-   * Return a bone bound to a specified [[HumanBone]], as a THREE.Object3D.
+   * Return a bone bound to a specified [[HumanBone]], as a BABYLON.Bone.
    *
    * See also: [[VRMHumanoid.getBoneNodes]]
    *
    * @param name Name of the bone you want
    */
   public getBoneNode(name: VRMSchema.HumanoidBoneName): GLTFNode | null {
-    return this.humanBones[name][0]?.node ?? null;
+    return this.humanBones[name][0]?.node ?? null
   }
 
   /**
-   * Return bones bound to a specified [[HumanBone]], as an array of THREE.Object3D.
+   * Return bones bound to a specified [[HumanBone]], as an array of BABYLON.Bone.
    * If there are no bones bound to the specified HumanBone, it will return an empty array.
    *
    * See also: [[VRMHumanoid.getBoneNode]]
@@ -203,7 +200,7 @@ export class Humanoid {
    * @param name Name of the bone you want
    */
   public getBoneNodes(name: VRMSchema.HumanoidBoneName): GLTFNode[] {
-    return this.humanBones[name]?.map((bone) => bone.node) ?? [];
+    return this.humanBones[name]?.map(bone => bone.node) ?? []
   }
 
   /**
@@ -211,21 +208,19 @@ export class Humanoid {
    */
   private _createHumanBones(boneArray: HumanBoneArray): HumanBones {
     const bones: HumanBones = Object.values(VRMSchema.HumanoidBoneName).reduce((accum, name) => {
-      accum[name] = [];
-      return accum;
-    }, {} as Partial<HumanBones>) as HumanBones;
+      accum[name] = []
+      return accum
+    }, {} as Partial<HumanBones>) as HumanBones
 
-    boneArray.forEach((bone) => {
-      bones[bone.name].push(bone.bone);
-    });
+    boneArray.forEach(bone => {
+      bones[bone.name].push(bone.bone)
+    })
 
-    return bones;
+    return bones
   }
 }
 
-
-export * from './humanBone';
-export * from './humanBones';
-export * from './humanDescription';
-export * from './humanLimit';
-export * from './importer';
+export * from './humanBone'
+export * from './humanDescription'
+export * from './humanLimit'
+export * from './importer'
