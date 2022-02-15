@@ -13,7 +13,7 @@ export * from './VRMSchema';
 
 // export * from './types';
 
-export type GLTFNode = BABYLON.TransformNode
+export type GLTFNode = BABYLON.Bone
 
 export type GLTFMesh = BABYLON.Mesh
 
