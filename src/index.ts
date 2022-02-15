@@ -78,13 +78,13 @@ export class VRMExtensionLoader implements IGLTFLoaderExtension {
   //     assign(babylonMesh);
   // });
   // }
-  // /**
-  //  * @inheritdoc
-  //  */
+  /**
+   * @inheritdoc
+   */
   // public _loadVertexDataAsync(
   //     context: string,
   //     primitive: IMeshPrimitive,
-  //     babylonMesh: Mesh,
+  //     babylonMesh: BABYLON.Mesh,
   // ) {
   //     if (!primitive.extras || !primitive.extras.targetNames) {
   //         return null;
