@@ -50,7 +50,7 @@ export interface Meta {
   /**
    * Thumbnail of the model.
    */
-  texture?: BABYLON.Texture
+  texture?: number | null | undefined
 
   /**
    * Title of the model.
