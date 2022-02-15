@@ -1,4 +1,4 @@
-import { GLTFNode } from '../types';
+import { GLTFNode, VRMSchema } from '../types';
 import { HumanLimit } from './humanLimit';
 
 /**
@@ -6,7 +6,7 @@ import { HumanLimit } from './humanLimit';
  */
 export class HumanBone {
   /**
-   * A [[GLTFNode]] (that actually is a `THREE.Object3D`) that represents the bone.
+   * A [[GLTFNode]] (that actually is a `BABYLON.Bone`) that represents the bone.
    */
   public readonly node: GLTFNode;
 
@@ -26,3 +26,16 @@ export class HumanBone {
     this.humanLimit = humanLimit;
   }
 }
+
+/**
+ * An array represents a `vrm.humanoid.humanBones` field of VRM specification.
+ */
+ export type HumanBoneArray = Array<{
+  name: VRMSchema.HumanoidBoneName;
+  bone: HumanBone;
+}>;
+
+/**
+ * This object is a object variant of [[VRMHumanBoneArray]], used internally in [[VRMHumanoid]].
+ */
+ export type HumanBones = { [name in VRMSchema.HumanoidBoneName]: HumanBone[] }
