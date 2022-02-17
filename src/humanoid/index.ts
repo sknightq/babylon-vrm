@@ -1,6 +1,6 @@
 import * as BABYLON from '@babylonjs/core'
 import { GLTFNode, RawVector3, RawVector4, VRMPose, VRMSchema } from '../types'
-import { quatInvertCompat } from '../utils/quatInvertCompat'
+// import { quatInvertCompat } from '../utils/quatInvertCompat'
 import { HumanBone, HumanBoneArray, HumanBones } from './humanBone'
 import { HumanDescription } from './humanDescription'
 
@@ -73,15 +73,14 @@ export class Humanoid {
       if (restState?.rotation) {
         // quatInvertCompat(_quatA.fromArray(restState.rotation));
         _quatA = BABYLON.Quaternion.FromArray(restState.rotation)
-        quatInvertCompat(_quatA)
+        // quatInvertCompat(_quatA)
+        BABYLON.Quaternion.InverseToRef(_quatA, _quatA)
       }
 
       // Get the position / rotation from the node
       _v3A.add(node.position)
 
-      // _quatA.premultiply(node.quaternion);
-      // rotationQ x _quatA
-      // _quatA.premultiply(node.rotationQuaternion);
+      // rotationQuaternion x _quatA
       _quatA = (node.rotationQuaternion as BABYLON.Quaternion).multiply(_quatA)
 
       pose[vrmBoneName] = {
@@ -124,11 +123,9 @@ export class Humanoid {
       }
 
       if (state.rotation) {
-        // node.quaternion.fromArray(state.rotation);
         node.rotationQuaternion = BABYLON.Quaternion.FromArray(state.rotation)
 
         if (restState.rotation) {
-          // node.quaternion.multiply(_quatA.fromArray(restState.rotation));
           _quatA = BABYLON.Quaternion.FromArray(restState.rotation)
           node.rotationQuaternion.multiply(_quatA)
         }
@@ -181,7 +178,7 @@ export class Humanoid {
   }
 
   /**
-   * Return a bone bound to a specified [[HumanBone]], as a BABYLON.Bone.
+   * Return a bone bound to a specified [[HumanBone]], as a BABYLON.TransformNode.
    *
    * See also: [[VRMHumanoid.getBoneNodes]]
    *
@@ -192,7 +189,7 @@ export class Humanoid {
   }
 
   /**
-   * Return bones bound to a specified [[HumanBone]], as an array of BABYLON.Bone.
+   * Return bones bound to a specified [[HumanBone]], as an array of BABYLON.TransformNode.
    * If there are no bones bound to the specified HumanBone, it will return an empty array.
    *
    * See also: [[VRMHumanoid.getBoneNode]]
