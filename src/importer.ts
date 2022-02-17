@@ -6,7 +6,7 @@ import { LookAtImporter } from './lookAt/importer'
 // import { MaterialImporter } from './material/importer';
 import { MetaImporter } from './meta/importer'
 import { SpringBoneImporter } from './springBone/importer'
-import { traverse } from './utils/traverse'
+import { traverse } from './utils'
 import { VRM } from './vrm'
 
 export interface ImporterOptions {
