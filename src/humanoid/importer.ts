@@ -1,5 +1,5 @@
 import * as BABYLON from '@babylonjs/core'
-import { GLTFLoader, } from '@babylonjs/loaders/glTF/2.0'
+import { GLTFLoader } from '@babylonjs/loaders/glTF/2.0'
 import { VRMSchema } from '../types'
 import { HumanBone, HumanBoneArray } from './humanBone'
 import { HumanDescription } from './humanDescription'
@@ -33,8 +33,7 @@ export class HumanoidImporter {
             return
           }
 
-          // const node = await gltf.parser.getDependency('node', bone.node);
-          const node = (loader.gltf.nodes as any)[bone.node]
+          const node = loader.babylonScene.transformNodes[bone.node]
 
           humanBoneArray.push({
             name: bone.bone,
