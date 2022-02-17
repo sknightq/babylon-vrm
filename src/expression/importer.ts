@@ -2,7 +2,7 @@ import * as BABYLON from '@babylonjs/core'
 import { GLTFSchema, VRMSchema } from '../types'
 import { GLTFLoader } from '@babylonjs/loaders/glTF/2.0'
 import { gltfExtractPrimitivesFromNode } from '../utils/gltfExtractPrimitivesFromNode'
-import { renameMaterialProperty } from '../utils/renameMaterialProperty'
+import { renameMaterialProperty } from '../utils'
 import { ExpressionGroup } from './group'
 import { ExpressionProxy } from './proxy'
 
@@ -61,8 +61,8 @@ export class ExpressionImporter {
               return
             }
 
-            const nodesUsingMesh: number[] = [];
-            (loader.gltf.nodes as GLTFSchema.Node[]).forEach((node, i) => {
+            const nodesUsingMesh: number[] = []
+            ;(loader.gltf.nodes as GLTFSchema.Node[]).forEach((node, i) => {
               if (node.mesh === bind.mesh) {
                 nodesUsingMesh.push(i)
               }
@@ -75,16 +75,16 @@ export class ExpressionImporter {
                 const primitives = (await gltfExtractPrimitivesFromNode(loader, nodeIndex))!
 
                 // check if the mesh has the target morph target
-                // if (!primitives.every(primitive => Array.isArray(primitive.morphTargetManager.influences) && morphTargetIndex < primitive.morphTargetManager.influences.length)) {
-                //   console.warn(`ExpressionImporter: ${schemaGroup.name} attempts to index ${morphTargetIndex}th morph but not found.`)
-                //   return
-                // }
+                if (!primitives.every(primitive => Array.isArray(primitive.morphTargetManager?.influences) && morphTargetIndex < Array.from(primitive.morphTargetManager?.influences || []).length)) {
+                  console.warn(`ExpressionImporter: ${schemaGroup.name} attempts to index ${morphTargetIndex}th morph but not found.`)
+                  return
+                }
 
                 group.addBind({
                   meshes: primitives,
                   morphTargetIndex,
                   // weight: bind.weight ?? 100
-                  weight: bind.weight ?? 1
+                  weight: bind.weight ?? 100
                 })
               })
             )
