@@ -1,12 +1,12 @@
 import * as BABYLON from '@babylonjs/core'
 import { GLTFLoader } from '@babylonjs/loaders/glTF/2.0';
-import { ExpressionProxy } from './expression/index'
-import { FirstPerson } from './firstPerson/index'
-import { Humanoid } from './humanoid/index'
-import { LookAtHead } from './lookAt/index'
+import { ExpressionProxy } from './expression'
+import { FirstPerson } from './firstPerson'
+import { Humanoid } from './humanoid'
+import { LookAtHead } from './lookAt'
 import { Meta } from './meta/index'
-import { SpringBoneManager } from './springBone/index'
-import { deepDispose } from './utils/disposer'
+import { SpringBoneManager } from './springBone'
+import { deepDispose } from './utils'
 import { Importer, ImporterOptions } from './importer'
 
 /**
@@ -96,6 +96,7 @@ export class VRM {
 
   /**
    * A [[VRMSpringBoneManager]] manipulates all spring bones attached on the VRM.
+   * SpringBone makes objects such as costumes and hair swaying
    * Usually you don't have to care about this property.
    */
   public readonly springBoneManager?: SpringBoneManager
@@ -155,6 +156,6 @@ export class VRM {
       scene.rootNodes.forEach(node => deepDispose(node))
     }
 
-    this.meta?.texture?.dispose()
+    // this.meta?.texture?.dispose()
   }
 }
