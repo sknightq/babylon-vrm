@@ -45,10 +45,10 @@ export class ExpressionGroup extends BABYLON.TransformNode {
     super(`${expressionName}`)
     this.name = `ExpressionController_${expressionName}`
 
-    // traverse 時の救済手段として Object3D ではないことを明示しておく
+    // Make it clear that it is not Object3D as a remedy for traverse
     this.type = 'ExpressionController'
-    // 表示目的のオブジェクトではないので、負荷軽減のために visible を false にしておく。
-    // これにより、このインスタンスに対する毎フレームの matrix 自動計算を省略できる。
+    // Since it is not an object to be displayed, set visible to false to reduce the load.
+    // This allows you to omit the automatic matrix calculation for each frame for this instance.
     this.visible = false
   }
 
@@ -145,14 +145,15 @@ export class ExpressionGroup extends BABYLON.TransformNode {
   public applyWeight(): void {
     const w = this.isBinary ? (this.weight < 0.5 ? 0.0 : 1.0) : this.weight
 
-    // this._binds.forEach(bind => {
-    //   bind.meshes.forEach(mesh => {
-    //     if (!mesh.morphTargetInfluences) {
-    //       return
-    //     } // TODO: we should kick this at `addBind`
-    //     mesh.morphTargetInfluences[bind.morphTargetIndex] += w * bind.weight
-    //   })
-    // })
+    this._binds.forEach(bind => {
+      bind.meshes.forEach(mesh => {
+        const morphTargetsManager  = mesh.morphTargetManager?.serialize()
+        if (!morphTargetsManager) {
+          return
+        } // TODO: we should kick this at `addBind`
+        morphTargetsManager.targets[bind.morphTargetIndex] += w * bind.weight
+      })
+    })
 
     this._materialValues.forEach(materialValue => {
       const prop = (materialValue.material as any)[materialValue.propertyName]
@@ -170,7 +171,12 @@ export class ExpressionGroup extends BABYLON.TransformNode {
         const deltaValue = materialValue.deltaValue as BABYLON.Vector3
         ;(materialValue.material as any)[materialValue.propertyName].add(_v3.copyFrom(deltaValue).multiplyByFloats(w, w, w))
       } else if (materialValue.type === ExpressionMaterialValueType.Quaternion) {
-        const multiplyDeltaValue = BABYLON.Quaternion.FromArray([(materialValue.deltaValue as any)[0] * w, (materialValue.deltaValue as any)[1] * w, (materialValue.deltaValue as any)[2] * w, (materialValue.deltaValue as any)[3] * w])
+        const multiplyDeltaValue = BABYLON.Quaternion.FromArray([
+          (materialValue.deltaValue as any)[0] * w,
+          (materialValue.deltaValue as any)[1] * w,
+          (materialValue.deltaValue as any)[2] * w,
+          (materialValue.deltaValue as any)[3] * w
+        ])
         ;(materialValue.material as any)[materialValue.propertyName].add(_v4.copyFrom(multiplyDeltaValue))
       } else if (materialValue.type === ExpressionMaterialValueType.COLOR3) {
         const multiplyDeltaValue = BABYLON.Color3.FromArray([(materialValue.deltaValue as any)[0] * w, (materialValue.deltaValue as any)[1] * w, (materialValue.deltaValue as any)[2] * w])
@@ -195,6 +201,16 @@ export class ExpressionGroup extends BABYLON.TransformNode {
     //     mesh.morphTargetInfluences[bind.morphTargetIndex] = 0.0
     //   })
     // })
+
+    this._binds.forEach(bind => {
+      bind.meshes.forEach(mesh => {
+        const morphTargetsManager  = mesh.morphTargetManager?.serialize()
+        if (!morphTargetsManager) {
+          return
+        } // TODO: we should kick this at `addBind`
+        morphTargetsManager.targets[bind.morphTargetIndex] = 0
+      })
+    })
 
     this._materialValues.forEach(materialValue => {
       const prop = (materialValue.material as any)[materialValue.propertyName]
