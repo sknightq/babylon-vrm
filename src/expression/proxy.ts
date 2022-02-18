@@ -61,7 +61,7 @@ export class ExpressionProxy {
   }
 
   /**
-   * Register a blend shape group.
+   * Register a blend shape (expreesion) group.
    *
    * @param name Name of the blend shape gorup
    * @param controller VRMExpressionController that describes the expression group
@@ -91,7 +91,7 @@ export class ExpressionProxy {
 
   /**
    * Set a weight to specified blend shape group.
-   *
+   * Map from 0~100 to 0~1
    * @param name Name of the blend shape group
    * @param weight Weight
    */
@@ -102,13 +102,16 @@ export class ExpressionProxy {
     }
   }
 
+  // NOTE: Make a short face animation by creating a track
+  // TODO: Change the example from 3JS to BJS
   /**
    * Get a track name of specified blend shape group.
    * This track name is needed to manipulate its blend shape group via keyframe animations.
+   * 
    *
    * @example Manipulate a blend shape group using keyframe animation
    * ```js
-   * const trackName = vrm.expressionProxy.getExpressionTrackName( THREE.VRMSchema.ExpressionPresetName.Blink );
+   * const trackName = vrm.expressionProxy.getExpressionTrackName( VRMSchema.ExpressionPresetName.Blink );
    * const track = new THREE.NumberKeyframeTrack(
    *   name,
    *   [ 0.0, 0.5, 1.0 ], // times
@@ -134,7 +137,7 @@ export class ExpressionProxy {
   }
 
   /**
-   * Update every blend shape groups.
+   * Update every blend shape (expression) groups.
    */
   public update(): void {
     Object.keys(this._expressionGroups).forEach((name) => {
