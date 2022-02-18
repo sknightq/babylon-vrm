@@ -16,12 +16,10 @@ export class ExpressionImporter {
    * @param gltf A parsed result of GLTF taken from GLTFLoader
    */
   public async import(loader: GLTFLoader): Promise<ExpressionProxy | null> {
-    // const vrmExt: VRMSchema.VRM | undefined = gltf.parser.json.extensions?.VRM;
     const vrmExt: VRMSchema.VRM | undefined = loader.gltf.extensions?.VRM
     if (!vrmExt) {
       return null
     }
-    console.log(vrmExt)
 
     const schemaExpression: VRMSchema.Expression | undefined = vrmExt.blendShapeMaster
     if (!schemaExpression) {
@@ -52,7 +50,8 @@ export class ExpressionImporter {
         }
 
         const group = new ExpressionGroup(name)
-        // gltf.scene.add(group);
+        // TODO: check if it is necessary to add group in scene in Babylon
+        // gltf.scene.add(group); 
         group.isBinary = schemaGroup.isBinary || false
 
         if (schemaGroup.binds) {
@@ -73,9 +72,9 @@ export class ExpressionImporter {
             await Promise.all(
               nodesUsingMesh.map(async nodeIndex => {
                 const primitives = (await gltfExtractPrimitivesFromNode(loader, nodeIndex))!
-
+                // IMPORTANT: The structure of morphTarget in BJS is different with 3JS. The influnece of marphTarget doesn't store in array morphTargetManger.influences
                 // check if the mesh has the target morph target
-                if (!primitives.every(primitive => Array.isArray(primitive.morphTargetManager?.influences) && morphTargetIndex < Array.from(primitive.morphTargetManager?.influences || []).length)) {
+                if (!primitives.every(primitive => primitive.morphTargetManager && morphTargetIndex < primitive.morphTargetManager.numTargets)) {
                   console.warn(`ExpressionImporter: ${schemaGroup.name} attempts to index ${morphTargetIndex}th morph but not found.`)
                   return
                 }
@@ -83,7 +82,8 @@ export class ExpressionImporter {
                 group.addBind({
                   meshes: primitives,
                   morphTargetIndex,
-                  // weight: bind.weight ?? 100
+                  // The weight value is 0~100 in specification 0.0
+                  // @see https://github.com/vrm-c/vrm-specification/blob/master/specification/0.0/schema/vrm.blendshape.bind.schema.json
                   weight: bind.weight ?? 100
                 })
               })
@@ -99,7 +99,8 @@ export class ExpressionImporter {
             }
 
             const materials: BABYLON.Material[] = []
-            // TODO: material
+            
+            // TODO: deal with material
             // loader.babylonScene.getChildren().forEach(object => {
             //   if ((object as any).material) {
             //     const material: BABYLON.Material[] | BABYLON.Material = (object as any).material
