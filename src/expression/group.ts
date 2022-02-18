@@ -29,8 +29,8 @@ const _v3 = new BABYLON.Vector3()
 const _v4 = new BABYLON.Quaternion()
 const _color = new BABYLON.Color3()
 
-// animationMixer の監視対象は、Scene の中に入っている必要がある。
-// そのため、表示オブジェクトではないけれど、Object3D を継承して Scene に投入できるようにする。
+// The monitoring target of animationMixer must be inside the Scene.
+// Therefore, although it is not a display object, it can inherit BABYLON.TransformNode and put it in the Scene.
 export class ExpressionGroup extends BABYLON.TransformNode {
   public weight = 0.0
   public isBinary = false
@@ -39,17 +39,19 @@ export class ExpressionGroup extends BABYLON.TransformNode {
   private _materialValues: ExpressionMaterialValue[] = []
   type: string
   name: string
-  visible: boolean
+  // visible: boolean
 
   constructor(expressionName: string) {
     super(`${expressionName}`)
     this.name = `ExpressionController_${expressionName}`
 
-    // Make it clear that it is not Object3D as a remedy for traverse
+    // Make it clear that it is not  BABYLON.TransformNode as a remedy for traverse
     this.type = 'ExpressionController'
     // Since it is not an object to be displayed, set visible to false to reduce the load.
     // This allows you to omit the automatic matrix calculation for each frame for this instance.
-    this.visible = false
+    // this.visible = false
+    // TODO: check if it works
+    this.setEnabled(false)
   }
 
   public addBind(args: { meshes: GLTFPrimitive[]; morphTargetIndex: number; weight: number }): void {
@@ -73,8 +75,8 @@ export class ExpressionGroup extends BABYLON.TransformNode {
     const propertyName = args.propertyName
 
     let value = (material as any)[propertyName]
+    // property has not been found
     if (!value) {
-      // property has not been found
       return
     }
     value = args.defaultValue || value
@@ -98,8 +100,7 @@ export class ExpressionGroup extends BABYLON.TransformNode {
       type = ExpressionMaterialValueType.Quaternion
       defaultValue = (value as BABYLON.Quaternion).clone()
 
-      // vectorProperty and targetValue index is different from each other
-      // exported vrm by UniVRM file is
+      // NOTE: vectorProperty and targetValue index is different from each other exported vrm by UniVRM file is
       //
       // vectorProperty
       // offset = targetValue[0], targetValue[1]
@@ -114,6 +115,7 @@ export class ExpressionGroup extends BABYLON.TransformNode {
       //   args.targetValue[0],
       //   args.targetValue[1],
       // ]);
+
       targetValue = BABYLON.Quaternion.FromArray([args.targetValue[2], args.targetValue[3], args.targetValue[0], args.targetValue[1]])
       deltaValue = targetValue.clone().subtract(defaultValue)
     } else if (value.isColor) {
@@ -150,7 +152,8 @@ export class ExpressionGroup extends BABYLON.TransformNode {
         const morphTargetsManager = mesh.morphTargetManager
         if (!morphTargetsManager) {
           return
-        } // TODO: we should kick this at `addBind`
+        }
+        // TODO: we should kick this at `addBind`
         morphTargetsManager.getTarget(bind.morphTargetIndex).influence += w * bind.weight
       })
     })
@@ -159,8 +162,8 @@ export class ExpressionGroup extends BABYLON.TransformNode {
       const prop = (materialValue.material as any)[materialValue.propertyName]
       if (prop === undefined) {
         return
-      } // TODO: we should kick this at `addMaterialValue`
-
+      }
+      // TODO: we should kick this at `addMaterialValue`
       if (materialValue.type === ExpressionMaterialValueType.NUMBER) {
         const deltaValue = materialValue.deltaValue as number
         ;(materialValue.material as any)[materialValue.propertyName] += deltaValue * w
@@ -193,21 +196,13 @@ export class ExpressionGroup extends BABYLON.TransformNode {
    * Clear previously assigned blend shapes.
    */
   public clearAppliedWeight(): void {
-    // this._binds.forEach(bind => {
-    //   bind.meshes.forEach(mesh => {
-    //     if (!mesh.morphTargetInfluences) {
-    //       return
-    //     } // TODO: we should kick this at `addBind`
-    //     mesh.morphTargetInfluences[bind.morphTargetIndex] = 0.0
-    //   })
-    // })
-
     this._binds.forEach(bind => {
       bind.meshes.forEach(mesh => {
         const morphTargetsManager = mesh.morphTargetManager
         if (!morphTargetsManager) {
           return
-        } // TODO: we should kick this at `addBind`
+        } 
+        // TODO: we should kick this at `addBind`
         morphTargetsManager.getTarget(bind.morphTargetIndex).influence = 0
       })
     })
@@ -216,8 +211,8 @@ export class ExpressionGroup extends BABYLON.TransformNode {
       const prop = (materialValue.material as any)[materialValue.propertyName]
       if (prop === undefined) {
         return
-      } // TODO: we should kick this at `addMaterialValue`
-
+      } 
+      // TODO: we should kick this at `addMaterialValue`
       if (materialValue.type === ExpressionMaterialValueType.NUMBER) {
         const defaultValue = materialValue.defaultValue as number
         ;(materialValue.material as any)[materialValue.propertyName] = defaultValue
