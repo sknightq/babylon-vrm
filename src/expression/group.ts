@@ -147,11 +147,11 @@ export class ExpressionGroup extends BABYLON.TransformNode {
 
     this._binds.forEach(bind => {
       bind.meshes.forEach(mesh => {
-        const morphTargetsManager  = mesh.morphTargetManager?.serialize()
+        const morphTargetsManager = mesh.morphTargetManager
         if (!morphTargetsManager) {
           return
         } // TODO: we should kick this at `addBind`
-        morphTargetsManager.targets[bind.morphTargetIndex] += w * bind.weight
+        morphTargetsManager.getTarget(bind.morphTargetIndex).influence += w * bind.weight
       })
     })
 
@@ -204,11 +204,11 @@ export class ExpressionGroup extends BABYLON.TransformNode {
 
     this._binds.forEach(bind => {
       bind.meshes.forEach(mesh => {
-        const morphTargetsManager  = mesh.morphTargetManager?.serialize()
+        const morphTargetsManager = mesh.morphTargetManager
         if (!morphTargetsManager) {
           return
         } // TODO: we should kick this at `addBind`
-        morphTargetsManager.targets[bind.morphTargetIndex] = 0
+        morphTargetsManager.getTarget(bind.morphTargetIndex).influence = 0
       })
     })
 
