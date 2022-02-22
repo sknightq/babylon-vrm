@@ -259,7 +259,7 @@ export class FirstPerson {
    */
   private _createErasedMesh(src: BABYLON.Mesh, erasingBonesIndex: number[]): BABYLON.Mesh {
     // const dst = new THREE.SkinnedMesh(src.geometry.clone(), src.material);
-    const dst = new BABYLON.Mesh(`${src.name}(erase)`)
+    const dst = new BABYLON.Mesh(`${src.name}(erase)`, ...[,,], src)
     dst.material = src.material
     dst.name = `${src.name}(erase)`
     // TODO: using the BJS method about frustum culling
