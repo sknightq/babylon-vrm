@@ -8,7 +8,7 @@ import * as BABYLON from '@babylonjs/core'
  */
 export function quatInvertCompat<T extends BABYLON.Quaternion>(target: T): T {
   if ((target as any).invert) {
-    // target.invert()
+    BABYLON.Quaternion.Inverse(target)
   } else {
     (target as any).inverse()
   }
