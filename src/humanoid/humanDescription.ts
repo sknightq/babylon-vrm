@@ -1,6 +1,4 @@
-
-  
-/**
+ /**
  * An interface represents a `HumanDescription` defined in VRM specification.
  * These fields are not used in this implementation.
  */
