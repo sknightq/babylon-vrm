@@ -1,7 +1,7 @@
-import * as BABYLON from '@babylonjs/core';
-import { GLTFLoader } from '@babylonjs/loaders/glTF/2.0';
-import type { GLTFPrimitive, GLTFSchema } from '../types';
-import { traverse } from './traverse';
+import * as BABYLON from '@babylonjs/core'
+import { GLTFLoader, INode, IMesh } from '@babylonjs/loaders/glTF/2.0'
+import type { GLTFPrimitive, GLTFSchema } from '../types'
+import { traverse } from './index'
 
 function extractPrimitivesInternal(loader: GLTFLoader, nodeIndex: number, node: BABYLON.TransformNode): GLTFPrimitive[] | null {
   /**
@@ -56,31 +56,32 @@ function extractPrimitivesInternal(loader: GLTFLoader, nodeIndex: number, node: 
    */
 
   // Make sure that the node has a mesh
-  const schemaNode: GLTFSchema.Node = loader.gltf.nodes[nodeIndex];
-  const meshIndex = schemaNode.mesh;
+  const schemaNode: GLTFSchema.Node = (loader.gltf.nodes as INode[])[nodeIndex]
+  const meshIndex = schemaNode.mesh
   if (meshIndex == null) {
-    return null;
+    return null
   }
 
   // How many primitives the mesh has?
-  const schemaMesh: GLTFSchema.Mesh = loader.gltf.meshes[meshIndex];
-  const primitiveCount = schemaMesh.primitives.length;
+  const schemaMesh: GLTFSchema.Mesh = (loader.gltf.meshes as IMesh[])[meshIndex]
+  const primitiveCount = schemaMesh.primitives.length
 
   // Traverse the node and take first (primitiveCount) meshes
-  const primitives: GLTFPrimitive[] = [];
-  traverse(node,(object) => {
+  const primitives: GLTFPrimitive[] = []
+  traverse(node, object => {
     if (primitives.length < primitiveCount) {
-      if ((object as any)._isMesh) {
-        primitives.push(object as GLTFPrimitive);
+      if ((object as BABYLON.Mesh)._isMesh) {
+        // TODO: Maybe change the type of primitives
+        primitives.push(object as GLTFPrimitive)
       }
     }
   })
 
-  return primitives;
+  return primitives
 }
 
 /**
- * Extract primitives ( `THREE.Mesh[]` ) of a node from a loaded GLTF.
+ * Extract primitives ( `BABYLON.Mesh[]` ) of a node from a loaded GLTF.
  * The main purpose of this function is to distinguish primitives and children from a node that has both meshes and children.
  *
  * It utilizes the behavior that GLTFLoader adds mesh primitives to the node object ( `THREE.Group` ) first then adds its children.
@@ -90,11 +91,11 @@ function extractPrimitivesInternal(loader: GLTFLoader, nodeIndex: number, node: 
  */
 export async function gltfExtractPrimitivesFromNode(loader: GLTFLoader, nodeIndex: number): Promise<GLTFPrimitive[] | null> {
   const node: BABYLON.TransformNode = loader.babylonScene.transformNodes[nodeIndex]
-  return extractPrimitivesInternal(loader, nodeIndex, node);
+  return extractPrimitivesInternal(loader, nodeIndex, node)
 }
 
 /**
- * Extract primitives ( `THREE.Mesh[]` ) of nodes from a loaded GLTF.
+ * Extract primitives ( `BABYLON.Mesh[]` ) of nodes from a loaded GLTF.
  * See {@link gltfExtractPrimitivesFromNode} for more details.
  *
  * It returns a map from node index to extraction result.
@@ -103,16 +104,15 @@ export async function gltfExtractPrimitivesFromNode(loader: GLTFLoader, nodeInde
  * @param gltf A GLTF object taken from GLTFLoader
  */
 export async function gltfExtractPrimitivesFromNodes(loader: GLTFLoader): Promise<Map<number, GLTFPrimitive[]>> {
-  // const nodes: THREE.Object3D[] = await gltf.parser.getDependencies('node');
   const nodes: BABYLON.TransformNode[] = loader.babylonScene.transformNodes
-  const map = new Map<number, GLTFPrimitive[]>();
+  const map = new Map<number, GLTFPrimitive[]>()
 
   nodes.forEach((node, index) => {
-    const result = extractPrimitivesInternal(loader, index, node);
+    const result = extractPrimitivesInternal(loader, index, node)
     if (result != null) {
-      map.set(index, result);
+      map.set(index, result)
     }
-  });
+  })
 
-  return map;
+  return map
 }
