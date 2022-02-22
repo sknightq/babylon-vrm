@@ -6,7 +6,7 @@ import { HumanLimit } from './humanLimit';
  */
 export class HumanBone {
   /**
-   * A [[GLTFNode]] (that actually is a `BABYLON.Bone`) that represents the bone.
+   * A [[GLTFNode]] (that actually is a `BABYLON.TransformNode`) that represents the bone.
    */
   public readonly node: GLTFNode;
 
