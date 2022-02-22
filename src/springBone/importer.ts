@@ -64,9 +64,11 @@ export class SpringBoneImporter {
 
         const stiffnessForce = vrmBoneGroup.stiffiness
         const gravityDir = new BABYLON.Vector3(
-          vrmBoneGroup.gravityDir.x, // TODO: Check wheather the direction of x is change become the BABYLON us right-handed coordinates
+          // TODO: Check wheather the direction of x is change become the BABYLON us right-handed coordinates
+          vrmBoneGroup.gravityDir.x, 
           vrmBoneGroup.gravityDir.y,
-          -vrmBoneGroup.gravityDir.z // VRM 0.0 uses left-handed y-up
+          // IMPORTANT: VRM 0.0 uses left-handed y-up (same as BJS)
+          vrmBoneGroup.gravityDir.z
         )
         const gravityPower = vrmBoneGroup.gravityPower
         const dragForce = vrmBoneGroup.dragForce
@@ -138,7 +140,8 @@ export class SpringBoneImporter {
         const offset = _v3A.set(
           collider.offset.x,
           collider.offset.y,
-          -collider.offset.z // VRM 0.0 uses left-handed y-up
+          // IMPORTANT: VRM-SPECIFICATION 0.0 uses left-handed y-up (same as BJS)
+          collider.offset.z
         )
 
         const colliderMesh = this._createColliderMesh(collider.radius, offset, loader.babylonScene)
