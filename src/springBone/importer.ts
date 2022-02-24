@@ -1,6 +1,6 @@
 import * as BABYLON from '@babylonjs/core'
 import { GLTFLoader } from '@babylonjs/loaders/glTF/2.0'
-import { GLTFNode, VRMSchema } from '../types'
+import { VRMSchema } from '../types'
 import { SpringBone } from './index'
 import { SpringBoneColliderGroup, SpringBoneColliderMesh } from './colliderGroup'
 import { SpringBoneGroup, SpringBoneManager } from './manager'
