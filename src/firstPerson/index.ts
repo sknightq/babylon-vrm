@@ -53,6 +53,7 @@ export class RendererFirstPersonFlags {
   constructor(firstPersonFlag: string | undefined, primitives: GLTFPrimitive[]) {
     this.firstPersonFlag = RendererFirstPersonFlags._parseFirstPersonFlag(firstPersonFlag)
     this.primitives = primitives
+    console.log('primitives:%O', primitives)
   }
 }
 
@@ -90,9 +91,6 @@ export class FirstPerson {
   private readonly _firstPersonBone: GLTFNode
   private readonly _meshAnnotations: RendererFirstPersonFlags[] = []
   private readonly _firstPersonBoneOffset: BABYLON.Vector3
-  // Cannot get the bone hierarchy in primitive->skeleton->bone
-  // but can get in transformNodes
-  private readonly _transformNodes: GLTFNode[]
 
   private _firstPersonOnlyLayer = FirstPerson._DEFAULT_FIRSTPERSON_ONLY_LAYER
   private _thirdPersonOnlyLayer = FirstPerson._DEFAULT_THIRDPERSON_ONLY_LAYER
@@ -106,11 +104,10 @@ export class FirstPerson {
    * @param firstPersonBoneOffset An offset from the specified first person bone
    * @param meshAnnotations A renderer settings. See the description of [[RendererFirstPersonFlags]] for more info
    */
-  constructor(firstPersonBone: GLTFNode, firstPersonBoneOffset: BABYLON.Vector3, meshAnnotations: RendererFirstPersonFlags[], loader: GLTFLoader) {
+  constructor(firstPersonBone: GLTFNode, firstPersonBoneOffset: BABYLON.Vector3, meshAnnotations: RendererFirstPersonFlags[]) {
     this._firstPersonBone = firstPersonBone
     this._firstPersonBoneOffset = firstPersonBoneOffset
     this._meshAnnotations = meshAnnotations
-    this._transformNodes = loader.babylonScene.transformNodes
   }
 
   public get firstPersonBone(): GLTFNode {
@@ -211,10 +208,112 @@ export class FirstPerson {
           primitive.layerMask = this._firstPersonOnlyLayer
         })
       } else if (item.firstPersonFlag === FirstPersonFlag.Auto) {
-        // NOTE: create a headless model if the mesh is not set the firstPerson flag
-        this._createHeadlessModel(item.primitives)
+        // NOTE: Why create a headless model in 'Auto' condition?
+        // The idea comes from Uni-VRM
+        // @see https://github.com/vrm-c/UniVRM/blob/eb897a2936/Assets/VRM/UniVRM/Scripts/FirstPerson/VRMFirstPerson.cs
+        // TODO： to finish the task of create headless model in BJS
+        // this._createHeadlessModel(item.primitives)
       }
     })
+  }
+  private _createHeadlessModel(primitives: GLTFPrimitive[]): void {
+    primitives.forEach(primitive => {
+      if (primitive._isMesh) {
+        const skinnedMesh = primitive as BABYLON.Mesh
+        this._createHeadlessModelForSkinnedMesh(skinnedMesh.parent! as BABYLON.TransformNode, skinnedMesh)
+      } else {
+        if (this._isEraseTarget(primitive)) {
+          primitive.layerMask = this._thirdPersonOnlyLayer
+          // primitive.setEnabled(false)
+        }
+      }
+    })
+  }
+  /**
+   *
+   */
+  private _createHeadlessModelForSkinnedMesh(parent: BABYLON.TransformNode, mesh: BABYLON.Mesh): void {
+    // const eraseBoneIndexes: number[] = []
+    // mesh.skeleton?.bones.forEach((bone, index) => {
+    //   if (this._isEraseTarget(bone)) {
+    //     eraseBoneIndexes.push(index)
+    //   }
+    // })
+    const bonesSet = new Set<string>()
+    mesh.skeleton?.bones.forEach(bone => {
+      if (bone.id === this._firstPersonBone.id) {
+        this._addTargetFlag(bone, bonesSet)
+      }
+    })
+    console.log(bonesSet)
+
+    // Unlike UniVRM we don't copy mesh if no invisible bone was found
+    // if (!eraseBoneIndexes.length) {
+    //   // NOTE: visible in both camare layer)
+    //   mesh.layerMask = this._bothLayer
+    //   return
+    // }
+    if (!Array.from(bonesSet).length) {
+      mesh.layerMask = this._bothLayer
+      return
+    }
+    mesh.layerMask = this._thirdPersonOnlyLayer
+    // TODO: This mesh
+    // const newMesh = this._createErasedMesh(mesh, eraseBoneIndexes)
+    // parent.add(newMesh);
+    // newMesh.parent = parent
+  }
+
+  /**
+   * Frustum culling in BJS
+   * @see https://doc.babylonjs.com/divingDeeper/scene/optimize_your_scene#changing-mesh-culling-strategy
+   */
+  private _createErasedMesh(src: BABYLON.Mesh, erasingBonesIndex: number[]): BABYLON.Mesh {
+    // const dst = new THREE.SkinnedMesh(src.geometry.clone(), src.material);
+    const dst = new BABYLON.Mesh(`${src.name}(erase)`, ...[, ,], src.clone())
+    dst.material = src.material
+    dst.name = `${src.name}(erase)`
+    // TODO: using the BJS method about frustum culling
+    // dst.frustumCulled = src.frustumCulled
+    // dst.layers.set(this._firstPersonOnlyLayer);
+    dst.layerMask = this._firstPersonOnlyLayer
+    const geometry: BABYLON.Geometry = dst.geometry as BABYLON.Geometry
+
+    // const skinIndexAttr = geometry.getAttribute('skinIndex').array
+    const skinIndexAttr = geometry.getVerticesData('matricesIndices') as []
+    const skinIndex = []
+    for (let i = 0; i < skinIndexAttr.length; i += 4) {
+      skinIndex.push([skinIndexAttr[i], skinIndexAttr[i + 1], skinIndexAttr[i + 2], skinIndexAttr[i + 3]])
+    }
+
+    const skinWeightAttr = geometry.getVerticesData('matricesWeights') as []
+    const skinWeight = []
+    for (let i = 0; i < skinWeightAttr.length; i += 4) {
+      skinWeight.push([skinWeightAttr[i], skinWeightAttr[i + 1], skinWeightAttr[i + 2], skinWeightAttr[i + 3]])
+    }
+
+    const indices = geometry.getIndices()
+    if (!indices?.length) {
+      throw new Error("The geometry doesn't have an index buffer")
+    }
+    const oldTriangles: number[] = Array.from(indices)
+
+    const count = this._excludeTriangles(oldTriangles, skinWeight, skinIndex, erasingBonesIndex)
+    const newTriangle: number[] = []
+    for (let i = 0; i < count; i++) {
+      newTriangle[i] = oldTriangles[i]
+    }
+    geometry.setIndices(newTriangle)
+
+    // mtoon material includes onBeforeRender. this is unsupported at SkinnedMesh#clone
+    // if (src.onBeforeRender) {
+    //   dst.onBeforeRender = src.onBeforeRender
+    // }
+    if (src.onBeforeBindObservable) {
+      // dst.onBeforeBindObservable = src.onBeforeBindObservable
+    }
+    // dst.bind(new BABYLON.Skeleton(src.skeleton.bones, src.skeleton.boneInverses), new BABYLON.Matrix())
+    return dst
   }
 
   private _excludeTriangles(triangles: number[], bws: number[][], skinIndex: number[][], exclude: number[]): number {
@@ -254,105 +353,27 @@ export class FirstPerson {
     return count
   }
   /**
-   * Frustum culling in BJS
-   * @see https://doc.babylonjs.com/divingDeeper/scene/optimize_your_scene#changing-mesh-culling-strategy
-   */
-  private _createErasedMesh(src: BABYLON.Mesh, erasingBonesIndex: number[]): BABYLON.Mesh {
-    // const dst = new THREE.SkinnedMesh(src.geometry.clone(), src.material);
-    const dst = new BABYLON.Mesh(`${src.name}(erase)`, ...[,,], src)
-    dst.material = src.material
-    dst.name = `${src.name}(erase)`
-    // TODO: using the BJS method about frustum culling
-    // dst.frustumCulled = src.frustumCulled
-    // dst.layers.set(this._firstPersonOnlyLayer);
-    dst.layerMask = this._firstPersonOnlyLayer
-    const geometry = dst.geometry
-
-    // const skinIndexAttr = geometry.getAttribute('skinIndex').array
-    const skinIndexAttr = geometry?.getIndices() as BABYLON.IndicesArray
-    const skinIndex = []
-    for (let i = 0; i < skinIndexAttr.length; i += 4) {
-      skinIndex.push([skinIndexAttr[i], skinIndexAttr[i + 1], skinIndexAttr[i + 2], skinIndexAttr[i + 3]])
-    }
-
-    // const skinWeightAttr = geometry.getAttribute('skinWeight').array
-    // const skinWeight = []
-    // for (let i = 0; i < skinWeightAttr.length; i += 4) {
-    //   skinWeight.push([skinWeightAttr[i], skinWeightAttr[i + 1], skinWeightAttr[i + 2], skinWeightAttr[i + 3]])
-    // }
-
-    // const index = geometry.getIndex()
-    // if (!index) {
-    //   throw new Error("The geometry doesn't have an index buffer")
-    // }
-    // const oldTriangles: number[] = Array.from(index.array)
-
-    // const count = this._excludeTriangles(oldTriangles, skinWeight, skinIndex, erasingBonesIndex)
-    // const newTriangle: number[] = []
-    // for (let i = 0; i < count; i++) {
-    //   newTriangle[i] = oldTriangles[i]
-    // }
-    // geometry.setIndex(newTriangle)
-
-    // mtoon material includes onBeforeRender. this is unsupported at SkinnedMesh#clone
-    // if (src.onBeforeRender) {
-    //   dst.onBeforeRender = src.onBeforeRender
-    // }
-    // dst.bind(new BABYLON.Skeleton(src.skeleton.bones, src.skeleton.boneInverses), new BABYLON.Matrix())
-    return dst
-  }
-  /**
-   *
-   */
-  private _createHeadlessModelForSkinnedMesh(parent: BABYLON.TransformNode, mesh: BABYLON.Mesh): void {
-    const eraseBoneIndexes: number[] = []
-    // mesh.skeleton?.bones.forEach((bone, index) => {
-    //   if (this._isEraseTarget(bone)) {
-    //     eraseBoneIndexes.push(index)
-    //   }
-    // })
-    this._transformNodes.forEach((n, index) => {
-      if (this._isEraseTarget(n)) {
-        eraseBoneIndexes.push(index)
-      }
-    })
-
-    // Unlike UniVRM we don't copy mesh if no invisible bone was found
-    if (!eraseBoneIndexes.length) {
-      // NOTE: visible in both camare layer)
-      mesh.layerMask = this._bothLayer
-      return
-    }
-    mesh.layerMask = this._thirdPersonOnlyLayer
-    const newMesh = this._createErasedMesh(mesh, eraseBoneIndexes)
-    // parent.add(newMesh);
-    newMesh.parent = parent
-  }
-
-  private _createHeadlessModel(primitives: GLTFPrimitive[]): void {
-    primitives.forEach(primitive => {
-      if (primitive._isMesh) {
-        const skinnedMesh = primitive as BABYLON.Mesh
-        this._createHeadlessModelForSkinnedMesh(skinnedMesh.parent! as BABYLON.TransformNode, skinnedMesh)
-      } else {
-        if (this._isEraseTarget(primitive)) {
-          primitive.layerMask = this._thirdPersonOnlyLayer
-        }
-      }
-    })
-  }
-
-  /**
    * It just checks whether the node or its parent is the first person bone or not.
    * @param bone The target bone
    */
   private _isEraseTarget(bone: GLTFNode | BABYLON.Node): boolean {
+    // IMPORTANT:The parent of bone is null but the children exist in tree relation.
+
     if (bone === this._firstPersonBone) {
       return true
     } else if (!bone.parent) {
       return false
     } else {
       return this._isEraseTarget(bone.parent)
+    }
+  }
+
+  private _addTargetFlag(bone: BABYLON.Bone, set: Set<string>): void {
+    if (!set.has(bone.id)) {
+      set.add(bone.id)
+      for (let i = 0; i < bone.children.length; i++) {
+        this._addTargetFlag(bone.children[i], set)
+      }
     }
   }
 }
