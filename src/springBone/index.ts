@@ -8,7 +8,6 @@ import { fromUnitVectorsToRef } from '../utils'
 // based on
 // https://github.com/vrm-c/vrm-specification/blob/084c4fd3a1/specification/0.0/schema/vrm.secondaryanimation.spring.schema.json
 
-const IDENTITY_MATRIX = Object.freeze(new BABYLON.Matrix())
 const IDENTITY_QUATERNION = Object.freeze(new BABYLON.Quaternion())
 
 // Variable for temporary storage during calculation (Once an instance is created, the rest is reused)
@@ -112,9 +111,9 @@ export class SpringBone {
     // this._currentTail.applyMatrix4(_matA);
     // this._prevTail.applyMatrix4(_matA);
     // this._nextTail.applyMatrix4(_matA);
-    this._currentTail = BABYLON.Vector3.TransformCoordinates(this._currentTail, _matA)
-    this._prevTail = BABYLON.Vector3.TransformCoordinates(this._prevTail, _matA)
-    this._nextTail = BABYLON.Vector3.TransformCoordinates(this._nextTail, _matA)
+    BABYLON.Vector3.TransformCoordinatesToRef(this._currentTail, _matA, this._currentTail)
+    BABYLON.Vector3.TransformCoordinatesToRef(this._prevTail, _matA, this._prevTail)
+    BABYLON.Vector3.TransformCoordinatesToRef(this._nextTail, _matA, this._nextTail)
 
     // uninstall inverse cache
     // NOTE: check the change
@@ -136,20 +135,21 @@ export class SpringBone {
     // convert tails to center space
     this._getMatrixWorldToCenter(_matA)
 
-    this._currentTail = BABYLON.Vector3.TransformCoordinates(this._currentTail, _matA)
-    this._prevTail = BABYLON.Vector3.TransformCoordinates(this._prevTail, _matA)
-    this._nextTail = BABYLON.Vector3.TransformCoordinates(this._nextTail, _matA)
+    BABYLON.Vector3.TransformCoordinatesToRef(this._currentTail, _matA, this._currentTail)
+    BABYLON.Vector3.TransformCoordinatesToRef(this._prevTail, _matA, this._prevTail)
+    BABYLON.Vector3.TransformCoordinatesToRef(this._nextTail, _matA, this._nextTail)
 
     // convert center space dependant state
     // _matA.multiply(this.bone.matrixWorld) // 🔥 ??
-    _matA.multiply(this.bone.getWorldMatrix())
+    _matA.multiplyToRef(this.bone.getWorldMatrix(), _matA)
 
     // this._centerSpacePosition.setFromMatrixPosition(_matA)
     // this._centerSpacePosition = BABYLON.Vector3.FromArray([_matA[12], _matA[13], _matA[14]])
     _matA.getTranslationToRef(this._centerSpacePosition)
 
     /// this._centerSpaceBoneLength = _v3A.copyFrom(this._initialLocalChildPosition).applyMatrix4(_matA).sub(this._centerSpacePosition).length()
-    this._centerSpaceBoneLength = BABYLON.Vector3.TransformCoordinates(_v3A.copyFrom(this._initialLocalChildPosition), _matA).subtract(this._centerSpacePosition).length()
+    BABYLON.Vector3.TransformCoordinatesToRef(_v3A.copyFrom(this._initialLocalChildPosition), _matA, _v3A)
+    this._centerSpaceBoneLength = _v3A.subtractToRef(this._centerSpacePosition, _v3A).length()
   }
 
   /**
@@ -182,8 +182,11 @@ export class SpringBone {
   constructor(bone: BABYLON.TransformNode, params: SpringBoneParameters = {}) {
     this.bone = bone // parent in uniVRM
     // this.bone.matrixAutoUpdate = false // Since it is calculated by update, automatic processing in three.js is unnecessary
-    // TODO: Check wheather there is automatic processing in BABYONJS
+    // TODO: Check wheather there is automatic processing in BJS
     // this.bone.freezeWorldMatrix()
+    if (!this.bone.isWorldMatrixFrozen) {
+      this.bone.freezeWorldMatrix()
+    }
 
     this.radius = params.radius ?? 0.02
     this.stiffnessForce = params.stiffnessForce ?? 1.0
@@ -205,19 +208,23 @@ export class SpringBone {
       // https://github.com/dwango/UniVRM/blob/master/Assets/VRM/UniVRM/Scripts/SpringBone/VRMSpringBone.cs#L246
 
       // vrm0 requires a 7cm fixed bone length for the final node in a chain - see https://github.com/vrm-c/vrm-specification/tree/master/specification/VRMC_springBone-1.0-beta#about-spring-configuration
-      this._initialLocalChildPosition.copyFrom(this.bone.position).normalize().scale(0.07)
+      this._initialLocalChildPosition.copyFrom(this.bone.position).normalize()
+      this._initialLocalChildPosition.scaleToRef(0.07, this._initialLocalChildPosition)
     } else {
       const firstChild = this.bone.getChildTransformNodes()[0]
       this._initialLocalChildPosition.copyFrom(firstChild.position)
     }
 
-    this._currentTail = BABYLON.Vector3.TransformCoordinates(this._currentTail.copyFrom(this._initialLocalChildPosition), this.bone.getWorldMatrix())
+    BABYLON.Vector3.TransformCoordinatesToRef(this._currentTail.copyFrom(this._initialLocalChildPosition), this.bone.getWorldMatrix(), this._currentTail)
+
     this._prevTail.copyFrom(this._currentTail)
     this._nextTail.copyFrom(this._currentTail)
 
     this._boneAxis.copyFrom(this._initialLocalChildPosition).normalize()
 
-    this._centerSpaceBoneLength = BABYLON.Vector3.TransformCoordinates(_v3A.copyFrom(this._initialLocalChildPosition), this.bone.getWorldMatrix()).subtract(this._centerSpacePosition).length()
+    BABYLON.Vector3.TransformCoordinatesToRef(_v3A.copyFrom(this._initialLocalChildPosition), this.bone.getWorldMatrix(), _v3A)
+    this._centerSpaceBoneLength = _v3A.subtractToRef(this._centerSpacePosition, _v3A).length()
+
     this.center = params.center ?? null
   }
 
@@ -227,13 +234,17 @@ export class SpringBone {
   //  */
   // TODO: finish reset
   public reset(): void {
-    // this.bone.rotationQuaternion.copyFrom(this._initialLocalRotation)
-    // // We need to update its matrixWorld manually, since we tweaked the bone by our hand
+    this.bone?.rotationQuaternion?.copyFrom(this._initialLocalRotation)
+    // We need to update its matrixWorld manually, since we tweaked the bone by our hand
     // this.bone.updateMatrix()
     // this.bone.matrixWorld.multiplyMatrices(this._getParentMatrixWorld(), this.bone.matrix)
+    // this.bone.computeWorldMatrix(true)
+    this.bone.freezeWorldMatrix(this.bone._localMatrix.multiply(this._getParentMatrixWorld()))
     // this._centerSpacePosition.setFromMatrixPosition(this.bone.matrixWorld)
+    this.bone.getWorldMatrix().getTranslationToRef(this._centerSpacePosition)
     // Apply updated position to tail states
     // this.bone.localToWorld(this._currentTail.copyFrom(this._initialLocalChildPosition))
+    BABYLON.Vector3.TransformCoordinatesToRef(this._currentTail.copyFrom(this._initialLocalChildPosition), this.bone.getWorldMatrix(), this._currentTail)
     this._prevTail.copyFrom(this._currentTail)
     this._nextTail.copyFrom(this._currentTail)
   }
@@ -248,19 +259,21 @@ export class SpringBone {
   public update(delta: number): void {
     if (delta <= 0) return
 
-    // The posture of the parent spring bone is constantly changing。
-    // Based on that, update your worldMatrix just before processing
+    // The posture of the parent spring bone is constantly changing。Based on that, update your worldMatrix just before processing
     // this.bone.matrixWorld.multiplyMatrices(this._getParentMatrixWorld(), this.bone.matrix)
-    this.bone.setPivotMatrix(this._getParentMatrixWorld().multiply(this.bone._localMatrix))
-    this.bone.computeWorldMatrix(true)
+
+    // NOTE: multiplyMatrices(a,b) in 3JS is b x a
+    this.bone.freezeWorldMatrix(this.bone._localMatrix.multiply(this._getParentMatrixWorld()))
+    // this.bone.computeWorldMatrix(true)
 
     if (this.bone.parent) {
       // Since SpringBone is processed in order from the parent、
       // Parent matrixWorld fetches quaternion from worldMatrix on the assumption that it is up to date。
       // Although there are restrictions, this method is used instead of getWorldQuaternion because the calculation is small.。
       // getWorldQuaternionLite(this.bone.parent, this._parentWorldRotation)
+      // TODO: the this._parentWorldRotation is not correct
       // skip the first param scale
-      this.bone.parent.computeWorldMatrix(true).decompose(...[,], this._parentWorldRotation)
+      this.bone.parent.getWorldMatrix().decompose(undefined, this._parentWorldRotation)
     } else {
       this._parentWorldRotation.copyFrom(IDENTITY_QUATERNION)
     }
@@ -273,11 +286,11 @@ export class SpringBone {
     _matA.getTranslationToRef(this._centerSpacePosition)
     // Get parent position in center space
     this._getMatrixWorldToCenter(_matB)
-    _matB.multiply(this._getParentMatrixWorld())
+    _matB.multiplyToRef(this._getParentMatrixWorld(), _matB)
 
     // several parameters
     const stiffness = this.stiffnessForce * delta
-    const external = _v3B.copyFrom(this.gravityDir).scale(this.gravityPower * delta)
+    const external = _v3B.copyFrom(this.gravityDir).scaleToRef(this.gravityPower * delta, _v3B)
 
     // Calculate the next position with verlet integral
     // this._nextTail
@@ -291,22 +304,27 @@ export class SpringBone {
     //   .add(_v3A.copyFrom(this._boneAxis).applyMatrix4(this._initialLocalMatrix).applyMatrix4(_matB).sub(this._centerSpacePosition).normalize().multiplyScalar(stiffness)) // Movement target of child bone by rotation of parent
     //   .add(external) // Amount of movement due to external force
 
-    const temp1 = BABYLON.Vector3.TransformCoordinates(_v3A.copyFrom(this._boneAxis), this._initialLocalMatrix)
-    const temp2 = BABYLON.Vector3.TransformCoordinates(temp1, _matB)
+    BABYLON.Vector3.TransformCoordinatesToRef(_v3A.copyFrom(this._boneAxis), this._initialLocalMatrix, _v3A)
+    BABYLON.Vector3.TransformCoordinatesToRef(_v3A, _matB, _v3A)
 
-    this._nextTail
-      .copyFrom(this._currentTail)
-      .add(
-        _v3A
-          .copyFrom(this._currentTail)
-          .subtract(this._prevTail)
-          .scale(1 - this.dragForce)
-      ) // Continue to move the previous frame (there is also attenuation)
-      .add(temp2.subtract(this._centerSpacePosition).normalize().scale(stiffness)) // Movement target of child bone by rotation of parent
-      .add(external) // Amount of movement due to external force
+    // Continue to move the previous frame (there is also attenuation)
+    this._nextTail.copyFrom(this._currentTail).addToRef(
+      _v3A
+        .copyFrom(this._currentTail)
+        .subtract(this._prevTail)
+        .scale(1 - this.dragForce),
+      this._nextTail
+    )
+    // Movement target of child bone by rotation of parent
+    this._nextTail.addToRef(_v3A.subtract(this._centerSpacePosition).normalize().scale(stiffness), this._nextTail)
+    // Amount of movement due to external force
+    this._nextTail.addToRef(external, this._nextTail)
 
     // normalize bone length
-    this._nextTail.subtract(this._centerSpacePosition).normalize().scale(this._centerSpaceBoneLength).add(this._centerSpacePosition)
+    this._nextTail.subtractToRef(this._centerSpacePosition, this._nextTail)
+    this._nextTail.normalize()
+    this._nextTail.scaleToRef(this._centerSpaceBoneLength, this._nextTail)
+    this._nextTail.addToRef(this._centerSpacePosition, this._nextTail)
 
     // Move with Collision
     this._collision(this._nextTail)
@@ -317,10 +335,12 @@ export class SpringBone {
     // Apply rotation, convert vector3 thing into actual quaternion
     // Original UniVRM is doing world unit calculus at here but we're gonna do this on local unit
     // since Three.js is not good at world coordination stuff
+
     // const initialCenterSpaceMatrixInv = mat4InvertCompat(_matA.copyFrom(_matB.multiply(this._initialLocalMatrix)))
     // const applyRotation = _quatA.setFromUnitVectors(this._boneAxis, _v3A.copyFrom(this._nextTail).applyMatrix4(initialCenterSpaceMatrixInv).normalize())
     const initialCenterSpaceMatrixInv = new BABYLON.Matrix()
-    _matA.copyFrom(_matB.multiply(this._initialLocalMatrix)).invertToRef(initialCenterSpaceMatrixInv)
+    _matA.copyFrom(_matB.multiplyToRef(this._initialLocalMatrix, _matB)).invertToRef(initialCenterSpaceMatrixInv)
+
     // IMPORTANT: the static method FromUnitVectorsToRef is not in below VERSION 5.0.0-alpha.4
     if (BABYLON.Quaternion.FromUnitVectorsToRef) {
       BABYLON.Quaternion.FromUnitVectorsToRef(this._boneAxis, BABYLON.Vector3.TransformCoordinates(_v3A.copyFrom(this._nextTail), initialCenterSpaceMatrixInv).normalize(), _quatA)
@@ -335,8 +355,8 @@ export class SpringBone {
     // this.bone.updateMatrix()
     // this.bone.matrixWorld.multiplyMatrices(this._getParentMatrixWorld(), this.bone.matrix)
 
-    this.bone.computeWorldMatrix(true)
-    this.bone.setPivotMatrix(this._getParentMatrixWorld().multiply(this.bone._localMatrix))
+    // this.bone.computeWorldMatrix(true)
+    this.bone.freezeWorldMatrix(this.bone._localMatrix.multiply(this._getParentMatrixWorld()))
   }
 
   /**
@@ -348,29 +368,31 @@ export class SpringBone {
   private _collision(tail: BABYLON.Vector3): void {
     this.colliders.forEach(collider => {
       this._getMatrixWorldToCenter(_matA)
-      _matA.multiply(collider.getWorldMatrix())
+      _matA.multiplyToRef(collider.getWorldMatrix(), _matA)
       // const colliderCenterSpacePosition = _v3A.setFromMatrixPosition(_matA)
       _matA.getTranslationToRef(_v3A)
       const colliderCenterSpacePosition = _v3A
-
-      const colliderRadius = collider.getBoundingInfo().boundingSphere!.radius // the bounding sphere is guaranteed to be exist by VRMSpringBoneImporter._createColliderMesh
+      // the bounding sphere is guaranteed to be exist by VRMSpringBoneImporter._createColliderMesh
+      const colliderRadius = collider.getBoundingInfo().boundingSphere!.radius
       const r = this.radius + colliderRadius
 
-      // if (tail.distanceToSquared(colliderCenterSpacePosition) <= r * r) {
       if (BABYLON.Vector3.DistanceSquared(tail, colliderCenterSpacePosition) <= r * r) {
         // hit. Extrude in the radial direction of the Collider
         // const normal = _v3B.subVectors(tail, colliderCenterSpacePosition).normalize()
         // const posFromCollider = _v3C.addVectors(colliderCenterSpacePosition, normal.multiplyScalar(r))
-        _v3B.copyFrom(tail.subtract(colliderCenterSpacePosition).normalize())
-
-        const normal = _v3B
-
-        _v3C.copyFrom(colliderCenterSpacePosition.add(normal.scale(r)))
+        tail.subtractToRef(colliderCenterSpacePosition, _v3B)
+        const normal = _v3B.normalize()
+        normal.scaleToRef(r, normal)
+        colliderCenterSpacePosition.addToRef(normal, _v3C)
 
         const posFromCollider = _v3C
 
         // normalize bone length
-        tail.copyFrom(posFromCollider.subtract(this._centerSpacePosition).normalize().scale(this._centerSpaceBoneLength).add(this._centerSpacePosition))
+        posFromCollider.subtractToRef(this._centerSpacePosition, posFromCollider)
+        posFromCollider.normalize()
+        posFromCollider.scaleToRef(this._centerSpaceBoneLength, posFromCollider)
+        posFromCollider.addToRef(this._centerSpacePosition, posFromCollider)
+        tail.copyFrom(posFromCollider)
       }
     })
   }
@@ -383,7 +405,7 @@ export class SpringBone {
     if (this._center) {
       target.copyFrom(this._center.getWorldMatrix())
     } else {
-      target = BABYLON.Matrix.Identity()
+      target.copyFrom(BABYLON.Matrix.Identity())
     }
 
     return target
@@ -399,7 +421,7 @@ export class SpringBone {
       // target.copyFrom((this._center.userdata.inverseCacheProxy as Matrix4InverseCache).inverse)
       this._center.getWorldMatrix().invertToRef(target)
     } else {
-      target = BABYLON.Matrix.Identity()
+      target.copyFrom(BABYLON.Matrix.Identity())
     }
 
     return target
