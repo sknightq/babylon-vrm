@@ -3,15 +3,6 @@ import * as BABYLON from '@babylonjs/core';
 // then we have to use `namespace` instead of export declarations for now.
 // See: https://github.com/TypeStrong/typedoc/pull/801
 
-// import * as GLTFSchema from './GLTFSchema';
-// import * as VRMSchema from './VRMSchema';
-
-// export { GLTFSchema, VRMSchema };
-
-export * from './GLTFSchema';
-export * from './VRMSchema';
-
-// export * from './types';
 
 export type GLTFNode = BABYLON.TransformNode
 
@@ -45,3 +36,5 @@ export type RawVector3 = [number, number, number];
  * Vector4 but it's a raw array.
  */
 export type RawVector4 = [number, number, number, number];
+
+export * from './VRMSchema';
