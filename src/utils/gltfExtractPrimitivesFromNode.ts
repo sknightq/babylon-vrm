@@ -2,15 +2,6 @@ import * as BABYLON from '@babylonjs/core'
 import { GLTFLoader, INode, IMesh } from '@babylonjs/loaders/glTF/2.0'
 import { traverse } from './index'
 
-
-function _traverse(loader: GLTFLoader, current: INode, callback: (node: INode) => void) {
-  callback(current)
-  const children = current.children || []
-  for (let i = 0; i < children.length; i++) {
-    _traverse(loader, (loader.gltf.nodes as INode[])[children[i]], callback)
-  }
-}
-
 function extractPrimitivesInternal(loader: GLTFLoader, nodeIndex: number, node: INode): BABYLON.Mesh[] | null {
   /**
    * Let's list up every possible patterns that parsed gltf nodes with a mesh can have,,,
