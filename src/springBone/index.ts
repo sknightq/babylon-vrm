@@ -308,13 +308,10 @@ export class SpringBone {
     BABYLON.Vector3.TransformCoordinatesToRef(_v3A, _matB, _v3A)
 
     // Continue to move the previous frame (there is also attenuation)
-    this._nextTail.copyFrom(this._currentTail).addToRef(
-      _v3A
-        .copyFrom(this._currentTail)
-        .subtract(this._prevTail)
-        .scale(1 - this.dragForce),
-      this._nextTail
-    )
+    _v3A.copyFrom(this._currentTail).subtractToRef(this._prevTail, _v3A)
+    _v3A.scaleToRef(1 - this.dragForce, _v3A)
+    
+    this._nextTail.copyFrom(this._currentTail).addToRef(_v3A, this._nextTail)
     // Movement target of child bone by rotation of parent
     this._nextTail.addToRef(_v3A.subtract(this._centerSpacePosition).normalize().scale(stiffness), this._nextTail)
     // Amount of movement due to external force
