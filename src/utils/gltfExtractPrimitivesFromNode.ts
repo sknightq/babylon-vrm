@@ -1,6 +1,5 @@
 import * as BABYLON from '@babylonjs/core'
 import { GLTFLoader, INode, IMesh } from '@babylonjs/loaders/glTF/2.0'
-import type { GLTFPrimitive, GLTFSchema } from '../types'
 import { traverse } from './index'
 
 function extractPrimitivesInternal(loader: GLTFLoader, nodeIndex: number, node: BABYLON.TransformNode): GLTFPrimitive[] | null {
@@ -56,23 +55,23 @@ function extractPrimitivesInternal(loader: GLTFLoader, nodeIndex: number, node: 
    */
 
   // Make sure that the node has a mesh
-  const schemaNode: GLTFSchema.Node = (loader.gltf.nodes as INode[])[nodeIndex]
+  const schemaNode: INode = (loader.gltf.nodes as INode[])[nodeIndex]
   const meshIndex = schemaNode.mesh
   if (meshIndex == null) {
     return null
   }
 
   // How many primitives the mesh has?
-  const schemaMesh: GLTFSchema.Mesh = (loader.gltf.meshes as IMesh[])[meshIndex]
+  const schemaMesh: IMesh = (loader.gltf.meshes as IMesh[])[meshIndex]
   const primitiveCount = schemaMesh.primitives.length
 
   // Traverse the node and take first (primitiveCount) meshes
-  const primitives: GLTFPrimitive[] = []
-  traverse(node, object => {
+  const primitives: BABYLON.Mesh[] = []
+  traverse(node._babylonTransformNode as BABYLON.Node, object => {
     if (primitives.length < primitiveCount) {
       if ((object as BABYLON.Mesh)._isMesh) {
         // TODO: Maybe change the type of primitives
-        primitives.push(object as GLTFPrimitive)
+        primitives.push(object as BABYLON.Mesh)
       }
     }
   })
@@ -89,8 +88,8 @@ function extractPrimitivesInternal(loader: GLTFLoader, nodeIndex: number, node: 
  * @param gltf A GLTF object taken from GLTFLoader
  * @param nodeIndex The index of the node
  */
-export async function gltfExtractPrimitivesFromNode(loader: GLTFLoader, nodeIndex: number): Promise<GLTFPrimitive[] | null> {
-  const node: BABYLON.TransformNode = loader.babylonScene.transformNodes[nodeIndex]
+export async function gltfExtractPrimitivesFromNode(loader: GLTFLoader, nodeIndex: number): Promise<BABYLON.Mesh[] | null> {
+  const node: INode = (loader.gltf.nodes as INode[])[nodeIndex]
   return extractPrimitivesInternal(loader, nodeIndex, node)
 }
 
@@ -103,9 +102,9 @@ export async function gltfExtractPrimitivesFromNode(loader: GLTFLoader, nodeInde
  *
  * @param gltf A GLTF object taken from GLTFLoader
  */
-export async function gltfExtractPrimitivesFromNodes(loader: GLTFLoader): Promise<Map<number, GLTFPrimitive[]>> {
-  const nodes: BABYLON.TransformNode[] = loader.babylonScene.transformNodes
-  const map = new Map<number, GLTFPrimitive[]>()
+export async function gltfExtractPrimitivesFromNodes(loader: GLTFLoader): Promise<Map<number, BABYLON.Mesh[]>> {
+  const nodes: INode[] = loader.gltf.nodes as INode[]
+  const map = new Map<number, BABYLON.Mesh[]>()
 
   nodes.forEach((node, index) => {
     const result = extractPrimitivesInternal(loader, index, node)
