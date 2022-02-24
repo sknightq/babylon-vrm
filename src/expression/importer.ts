@@ -1,6 +1,6 @@
 import * as BABYLON from '@babylonjs/core'
-import { GLTFSchema, VRMSchema } from '../types'
-import { GLTFLoader } from '@babylonjs/loaders/glTF/2.0'
+import { VRMSchema } from '../types'
+import { GLTFLoader,INode } from '@babylonjs/loaders/glTF/2.0'
 import { gltfExtractPrimitivesFromNode } from '../utils/gltfExtractPrimitivesFromNode'
 import { renameMaterialProperty } from '../utils'
 import { ExpressionGroup } from './group'
@@ -61,7 +61,7 @@ export class ExpressionImporter {
             }
 
             const nodesUsingMesh: number[] = []
-            ;(loader.gltf.nodes as GLTFSchema.Node[]).forEach((node, i) => {
+            ;(loader.gltf.nodes as INode[]).forEach((node, i) => {
               if (node.mesh === bind.mesh) {
                 nodesUsingMesh.push(i)
               }
