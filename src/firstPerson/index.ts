@@ -212,7 +212,7 @@ export class FirstPerson {
         // The idea comes from Uni-VRM
         // @see https://github.com/vrm-c/UniVRM/blob/eb897a2936/Assets/VRM/UniVRM/Scripts/FirstPerson/VRMFirstPerson.cs
         // TODO： to finish the task of create headless model in BJS
-        // this._createHeadlessModel(item.primitives)
+        this._createHeadlessModel(item.primitives)
       }
     })
   }
